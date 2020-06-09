@@ -6,7 +6,7 @@ mbrseg			equ		7c0h
 newseg			equ		800h
 
 jmp start
-msgwelcome:			db	'---------------Welcome chos os----------','$'
+msgwelcome:			db	'-----Welcome chos os------','$'
 msgstep1:			db	'step1: now is in mbr','$'
 msgmem1:			db	'memory addresss is------','$'
 msgcs1:				db	'cs:????H','$'
@@ -124,8 +124,8 @@ floppyload:
 	cmp		byte	[sector+11],NUMsector+1
 	jne		floppyload
 	mov		byte	[sector+11],1
-	inc		byte	[sector+11]
-	cmp		byte	[header+11],NUMsector+1
+	inc		byte	[header+11]
+	cmp		byte	[header+11],NUMheader+1
 	jne		floppyload
 	mov		byte	[header+11],0
 	inc		byte	[cylind+11]
@@ -198,8 +198,8 @@ readok:
 exitread:
 	ret
 
-times	510-($$-$) db 0
-db 		0x55,0xaa
+times 510-($-$$) db 0
+db 0x55,0xaa
 
 ;
 ;
