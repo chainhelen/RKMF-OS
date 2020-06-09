@@ -1,4 +1,4 @@
-NUMSector		EQU		4
+NUMsector		EQU		4
 NUMheader		EQU		0
 NUMcylind		EQU		0
 
@@ -68,7 +68,7 @@ newline:
 showcs:
 	mov		ax,cs
 	mov		dl,ah
-	call	HL4BIT
+	call	hl4bit
 
 	mov		dl,bh
 	call	ascii
@@ -79,7 +79,7 @@ showcs:
 	mov		[msgcs1+4],dl
 
 	mov		dl,al
-	call	HL4BIT
+	call	hl4bit
 
 	mov		dl,bh
 	call	ascii
@@ -94,7 +94,7 @@ showcs:
 
 	ret
 
-ASCII:
+ascii:
 	cmp		dl,9
 	jg		letter
 	add		dl,30h
@@ -110,7 +110,7 @@ hl4bit:
 	shr		dh,1
 	shr		dh,1
 	shr		dh,1
-	mvo		bh,dh
+	mov		bh,dh
 	and		bl,0fh
 	ret
 
@@ -125,7 +125,6 @@ floppyload:
 	jne		floppyload
 	mov		byte	[sector+11],1
 	inc		byte	[sector+11]
-	cmp		byte	[header+11]
 	cmp		byte	[header+11],NUMsector+1
 	jne		floppyload
 	mov		byte	[header+11],0
@@ -196,11 +195,11 @@ readok:
 	mov		si,floppyok
 	call	printstr
 	call	newline
-exiread:
+exitread:
 	ret
 
-times	510-($-$$) db 0
-db 0x55,0xaa
+times	510-($$-$) db 0
+db 		0x55,0xaa
 
 ;
 ;
@@ -224,9 +223,9 @@ outmbr:
 call	newlinenew
 call	newlinenew
 mov		si,msgstep2-512
-call	printstrline
+call	printstrnew
 call	newlinenew
-mov		si,mesmeme2-512
+mov		si,mesmem2-512
 call	printstrnew
 ret
 

@@ -2,7 +2,7 @@ ASM=nasm
 
 .PHONE: clean
 
-run-qemu: buildimg
+run-bochs: buildimg
 	bochs -f bochsrc
 
 buildimg:	boot.bin
