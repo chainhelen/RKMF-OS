@@ -9,7 +9,7 @@ dptseg			equ		7e0h
 jmp start
 msgwelcome:			db	'--Welcome RKMF OS--','$'
 msgstep1:			db	'step1: now is in mbr','$'
-msgmem1:			db	'memory addresss is------','$'
+msgmem1:			db	'memory addresss is---','$'
 msgcs1:				db	'cs:????H','$'
 
 cylind		db	'cylind:?? $',0
@@ -31,14 +31,11 @@ mov		es, ax
 call	inmbrshow
 call	showcs
 call	newline
-call	newline
-call	newline
 ret
 
 inmbrshow:
 mov		si,msgwelcome
 call	printstr
-call 	newline
 call 	newline
 mov		si,msgstep1
 call	printstr
@@ -233,6 +230,8 @@ call	createdpt
 
 jmp 	next
 
+jmp $
+
 createdpt:
 lgdt	[gdt_size]
 
@@ -255,7 +254,6 @@ ret
 
 outmbr:
 call	newlinenew
-call	newlinenew
 mov		si,msgstep2
 call	printstrnew
 call	newlinenew
@@ -264,7 +262,6 @@ call	printstrnew
 ret
 
 showprotect:
-call	newlinenew
 call	newlinenew
 mov		si,msgstep3
 call	newlinenew
@@ -275,7 +272,8 @@ ret
 showcsnew:
 	mov		ax,cs
 	mov		dl,ah
-	call	HL4BITnew
+	call	hl4bitnew
+
 	mov		dl,bh
 	call	asciinew
 	mov		[msgcs2+3],dl
@@ -285,7 +283,8 @@ showcsnew:
 	mov		[msgcs2+4],dl
 
 	mov		dl,al
-	call	HL4BITnew
+	call	hl4bitnew
+
 	mov		dl,bh
 	call	asciinew
 	mov		[msgcs2+5],dl
@@ -321,12 +320,13 @@ newlinenew:
 asciinew:
 	cmp		dl,9
 	jg		letternew
+	add  	dl,30h
 	ret
 letternew:
 	add		dl,37h
 	ret
 
-HL4BITnew:
+hl4bitnew:
 	mov		dh,dl
 	mov		bl,dl
 	shr		dh,1
@@ -355,38 +355,38 @@ inprotectmode:
 mov		ax,00000000000_10_000B
 mov		ds,ax
 
-mov		byte 	[0xb8000+20*160+0x00],'P'
-mov		byte 	[0xb8000+20*160+0x01],0x0c
-mov		byte 	[0xb8000+20*160+0x02],'R'
-mov		byte 	[0xb8000+20*160+0x03],0x0c
-mov		byte 	[0xb8000+20*160+0x04],'O'
-mov		byte 	[0xb8000+20*160+0x05],0x0c
-mov		byte 	[0xb8000+20*160+0x06],'T'
-mov		byte 	[0xb8000+20*160+0x07],0x0c
-mov		byte 	[0xb8000+20*160+0x08],'E'
-mov		byte 	[0xb8000+20*160+0x09],0x0c
-mov		byte 	[0xb8000+20*160+0x0a],'C'
-mov		byte 	[0xb8000+20*160+0x0b],0x0c
-mov		byte 	[0xb8000+20*160+0x0c],'T'
-mov		byte 	[0xb8000+20*160+0x0d],0x0c
-mov		byte 	[0xb8000+20*160+0x0e],'-'
-mov		byte 	[0xb8000+20*160+0x0f],0x0c
-mov		byte 	[0xb8000+20*160+0x10],'M'
-mov		byte 	[0xb8000+20*160+0x11],0x0c
-mov		byte 	[0xb8000+20*160+0x12],'E'
-mov		byte 	[0xb8000+20*160+0x13],0x0c
-mov		byte 	[0xb8000+20*160+0x14],'D'
-mov		byte 	[0xb8000+20*160+0x15],0x0c
-mov		byte 	[0xb8000+20*160+0x16],'E'
-mov		byte 	[0xb8000+20*160+0x17],0x0c
-mov		byte 	[0xb8000+20*160+0x18],' '
-mov		byte 	[0xb8000+20*160+0x19],0x0c
-mov		byte 	[0xb8000+20*160+0x1a],'!'
-mov		byte 	[0xb8000+20*160+0x1b],0x0c
-mov		byte 	[0xb8000+20*160+0x1c],'!'
-mov		byte 	[0xb8000+20*160+0x1d],0x0c
-mov		byte 	[0xb8000+20*160+0x1e],'!'
-mov		byte 	[0xb8000+20*160+0x1f],0x0c
+mov		byte 	[0xb8000+22*160+0x00],'P'
+mov		byte 	[0xb8000+22*160+0x01],0x0c
+mov		byte 	[0xb8000+22*160+0x02],'R'
+mov		byte 	[0xb8000+22*160+0x03],0x0c
+mov		byte 	[0xb8000+22*160+0x04],'O'
+mov		byte 	[0xb8000+22*160+0x05],0x0c
+mov		byte 	[0xb8000+22*160+0x06],'T'
+mov		byte 	[0xb8000+22*160+0x07],0x0c
+mov		byte 	[0xb8000+22*160+0x08],'E'
+mov		byte 	[0xb8000+22*160+0x09],0x0c
+mov		byte 	[0xb8000+22*160+0x0a],'C'
+mov		byte 	[0xb8000+22*160+0x0b],0x0c
+mov		byte 	[0xb8000+22*160+0x0c],'T'
+mov		byte 	[0xb8000+22*160+0x0d],0x0c
+mov		byte 	[0xb8000+22*160+0x0e],'-'
+mov		byte 	[0xb8000+22*160+0x0f],0x0c
+mov		byte 	[0xb8000+22*160+0x10],'M'
+mov		byte 	[0xb8000+22*160+0x11],0x0c
+mov		byte 	[0xb8000+22*160+0x12],'E'
+mov		byte 	[0xb8000+22*160+0x13],0x0c
+mov		byte 	[0xb8000+22*160+0x14],'D'
+mov		byte 	[0xb8000+22*160+0x15],0x0c
+mov		byte 	[0xb8000+22*160+0x16],'E'
+mov		byte 	[0xb8000+22*160+0x17],0x0c
+mov		byte 	[0xb8000+22*160+0x18],' '
+mov		byte 	[0xb8000+22*160+0x19],0x0c
+mov		byte 	[0xb8000+22*160+0x1a],'!'
+mov		byte 	[0xb8000+22*160+0x1b],0x0c
+mov		byte 	[0xb8000+22*160+0x1c],'!'
+mov		byte 	[0xb8000+22*160+0x1d],0x0c
+mov		byte 	[0xb8000+22*160+0x1e],'!'
+mov		byte 	[0xb8000+22*160+0x1f],0x0c
 
 mov		ax,00000000000_11_000B
 mov		ss,ax
@@ -402,28 +402,28 @@ jnz		over
 
 pop		eax
 
-mov		byte	[0xb8000+22*160+0x00],'S'
-mov		byte	[0xb8000+22*160+0x01],0x0c
-mov		byte	[0xb8000+22*160+0x02],'t'
-mov		byte	[0xb8000+22*160+0x03],0x0c
-mov		byte	[0xb8000+22*160+0x04],'a'
-mov		byte	[0xb8000+22*160+0x05],0x0c
-mov		byte	[0xb8000+22*160+0x06],'c'
-mov		byte	[0xb8000+22*160+0x07],0x0c
-mov		byte	[0xb8000+22*160+0x08],'k'
-mov		byte	[0xb8000+22*160+0x09],0x0c
-mov		byte	[0xb8000+22*160+0x0a],':'
-mov		byte	[0xb8000+22*160+0x0b],0x0c
-mov		byte	[0xb8000+22*160+0x0c],al
-mov		byte	[0xb8000+22*160+0x0d],0x0c
-mov		byte	[0xb8000+22*160+0x0e],','
-mov		byte	[0xb8000+22*160+0x0f],0x0c
-mov		byte	[0xb8000+22*160+0x10],'0'
-mov		byte	[0xb8000+22*160+0x11],0x0c
-mov		byte	[0xb8000+22*160+0x12],'K'
-mov		byte	[0xb8000+22*160+0x13],0x0c
-mov		byte	[0xb8000+22*160+0x14],'!'
-mov		byte	[0xb8000+22*160+0x15],0x0c
+mov		byte	[0xb8000+23*160+0x00],'S'
+mov		byte	[0xb8000+23*160+0x01],0x0c
+mov		byte	[0xb8000+23*160+0x02],'t'
+mov		byte	[0xb8000+23*160+0x03],0x0c
+mov		byte	[0xb8000+23*160+0x04],'a'
+mov		byte	[0xb8000+23*160+0x05],0x0c
+mov		byte	[0xb8000+23*160+0x06],'c'
+mov		byte	[0xb8000+23*160+0x07],0x0c
+mov		byte	[0xb8000+23*160+0x08],'k'
+mov		byte	[0xb8000+23*160+0x09],0x0c
+mov		byte	[0xb8000+23*160+0x0a],':'
+mov		byte	[0xb8000+23*160+0x0b],0x0c
+mov		byte	[0xb8000+23*160+0x0c],al
+mov		byte	[0xb8000+23*160+0x0d],0x0c
+mov		byte	[0xb8000+23*160+0x0e],','
+mov		byte	[0xb8000+23*160+0x0f],0x0c
+mov		byte	[0xb8000+23*160+0x10],'0'
+mov		byte	[0xb8000+23*160+0x11],0x0c
+mov		byte	[0xb8000+23*160+0x12],'K'
+mov		byte	[0xb8000+23*160+0x13],0x0c
+mov		byte	[0xb8000+23*160+0x14],'!'
+mov		byte	[0xb8000+23*160+0x15],0x0c
 
 over:
 jmp $

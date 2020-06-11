@@ -14,6 +14,5 @@ boot.bin: boot.asm
 	$(ASM)	$(ASMBFLAGS) -o $@ $<
 
 clean:
-	rm boot.bin
-	rm a.img
-
+	- rm boot.bin
+	- rm a.img
