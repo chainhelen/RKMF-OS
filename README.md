@@ -1,6 +1,8 @@
-RKMF-OS
+### RKMF-OS
 
 A simple and beautiful operating system  
+
+![hello-rkmf-os.png](image/hello-rkmf-os.png)
 
 ### reference
 

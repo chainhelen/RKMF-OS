@@ -1,10 +1,9 @@
 void cstart(void) 
 {
-	int i=0;
-	for (i=0;i<=10;i++)
+	char *str = "Hello RKMF-OS\0";
+	for (int i=0;i<13;i++)
 	{
-		*(char *)(0xb8000+23*160+i) = 'C';  
-		*(char *)(0xb8000+23*160+1+i)= 0x0c;
-		i++;
+		*(char *)(0xb8000+15*160+i*2) = str[i];  
+		*(char *)(0xb8000+15*160+i*2+1)= 0x0c;
 	}
 }
