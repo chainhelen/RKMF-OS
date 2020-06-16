@@ -4,7 +4,24 @@ A simple and beautiful operating system
 
 ![hello-rkmf-os.png](image/hello-rkmf-os.png)
 
-### reference
+### Run
+##### On linux
+1. Need to install tools below (`apt-install ${tool}` if ubuntu)
+```
+bochs or qemu, bximage, ld, nasm, gcc
+```
+
+2. Build
+```
+make run-bochs
+```
+or 
+```
+make run-qemu
+```
+then you can see the interface
+
+### Reference
 
 > [int_10](https://stanislavs.org/helppc/int_10.html)  
 > [知乎 计算机自制操作系统](https://zhuanlan.zhihu.com/c_1193254878150045696)  
