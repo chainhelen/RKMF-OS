@@ -1,8 +1,15 @@
-### RKMF-OS
+### RKMF-OS 
 
-A simple and beautiful operating system  
 
-![hello-rkmf-os.png](image/hello-rkmf-os.png)
+**A simple and beautiful operating system**
+
+
+
+<div align="center"><img src="./image/rkmf.png" /></div> 
+
+
+------ 
+
 
 ### Run
 ##### On linux
@@ -20,6 +27,8 @@ or
 make run-qemu
 ```
 then you can see the interface
+
+![hello-rkmf-os.png](image/hello-rkmf-os.png)
 
 ### Reference
 
