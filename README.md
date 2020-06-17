@@ -18,12 +18,17 @@ bochs(or qemu), bximage, ld, nasm, gcc
 ```
 
 2. Build
+
 ```
 make run-bochs(or make run-qemu)
 ```
-then you can see the interface
 
+###### on branch `hello`
 ![hello-rkmf-os.png](image/hello-rkmf-os.png)
+
+
+###### on branch `4windows`
+![4windows.png](image/4windows.png)
 
 
 ### Reference
