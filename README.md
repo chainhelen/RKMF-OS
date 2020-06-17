@@ -19,11 +19,7 @@ bochs or qemu, bximage, ld, nasm, gcc
 
 2. Build
 ```
-make run-bochs
-```
-or 
-```
-make run-qemu
+make run-bochs or make run-qemu
 ```
 then you can see the interface
 
@@ -41,6 +37,6 @@ then you can see the interface
 > [oranges一个操作系统的实现](https://www.amazon.cn/dp/B00FF1Y9AQ)  
 
 
-##### Mem layout  
+##### mem layout  
 
 ![mem.png](image/mem.png) 
