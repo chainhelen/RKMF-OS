@@ -11,12 +11,17 @@ BaseOfLoaderFilePhyAddr	equ	BaseOfLoader * 10h
 KernelEntryPointPhyAddr	equ	030400h	; 注意：1、必须与 MAKEFILE 中参数 -Ttext 的值相等!!
 BaseOfStack		equ		07c00h	; 	栈向地址减少的方向增长
 
-; 变量
 RootDirSectors			equ	14   	; 	根目录占用空间
 SectorNoOfRootDirectory	equ	19		; 	Root	Directory 的第一扇区号	
 SectorNoOfFAT1			equ	1		;	FAT1的第一个扇区号 = BPB_RsvdSecCnt
 DeltaSectorNo			equ	17		;	DeltaSectorNo = BPB_RsvdSecCnt + (BPB_NumFATs * FATSz) - 2
 									;	文件的开始Sector号 = DirEntry中的开始Sector号 + 根目录占用Sector数目 + DeltaSectorNo
+
+; 4windows
+colorfuncport			equ		3c8h	;	设置调色板功能端口
+colorsetport			equ		3c9h	;	设置调色板颜色端口
+displayadd				equ		0xa000	;	320*200下显示缓冲区地址
+
 jmp	short LABEL_START
 
 ; FAT 格式
@@ -305,6 +310,10 @@ ConstructGdt:
 	ret
 
 preprotectmode:
+	; 4windows
+	call	setmode320
+	call	colorset
+
 	call	ConstructGdt
 	; 打开地址线A20
 	in 	al,0x92
@@ -411,3 +420,74 @@ MemCpy:
 
 	ret			; 函数结束，返回
 ; MemCpy 结束-------------------------------------------------------------
+
+; 4windows 设置320分辨率
+setmode320:
+	mov ah,0
+	mov al,13h         ;320*200
+	int 10h
+	ret
+
+; 4windows 画背景
+colorset:             		;显示色设置
+	mov dx,  colorfuncport
+	mov al,  0           	;建调色板索引0号
+	out dx,  al
+	
+	mov dx,  colorsetport   ;设置蓝色背景
+	mov al,0           		;R分量
+	out dx,al
+	mov al,0           		;G分量
+	out dx,al
+	mov al,35          		;B分量
+	out dx,al
+
+	mov dx,  colorfuncport
+	mov al,  1              ;建调色板索引1号
+	out dx,al
+	
+	mov dx,  colorsetport   ;设置白色调色板
+	mov al,63           	;R分量
+	out dx,al
+	mov al,63           	;G分量
+	out dx,al
+	mov al,63	          	;B分量
+	out dx,al
+	
+	mov dx,  colorfuncport
+	mov al,  2              ;建调色板索引2号
+	out dx,al
+	
+	mov dx,  colorsetport   ;设置红色调色板
+	mov al,63           	;R分量
+	out dx,al
+	mov al,0           		;G分量
+	out dx,al
+	mov al,0          		;B分量
+	out dx,al
+	
+	mov dx,  colorfuncport
+	mov al, 3           	;建调色板索引3号
+	out dx,al
+	
+	mov dx,  colorsetport   ;设置黄色
+	mov al,30           	;R分量
+	out dx,al
+	mov al,30           	;G分量
+	out dx,al
+	mov al,0          		;B分量
+	out dx,al
+	
+	mov dx,  colorfuncport
+	mov al, 4              ;建调色板索引4号
+	out dx,al
+	
+	mov dx,  colorsetport  ;设置黑色
+	mov al,0           	   ;R分量
+	out dx,al
+	mov al,0           	   ;G分量
+	out dx,al
+	mov al,0          	   ;B分量
+	out dx,al
+	
+	ret
