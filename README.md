@@ -14,12 +14,12 @@
 ##### On linux
 1. Need to install tools below (`apt-install ${tool}` if ubuntu)
 ```
-bochs or qemu, bximage, ld, nasm, gcc
+bochs(or qemu), bximage, ld, nasm, gcc
 ```
 
 2. Build
 ```
-make run-bochs or make run-qemu
+make run-bochs(or make run-qemu)
 ```
 then you can see the interface
 
