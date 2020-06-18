@@ -23,11 +23,11 @@ buildimg: $(BOOT_BIN) $(LOADER_BIN) $(KERNEL_BIN)
 	sudo cp	$(KERNEL_BIN) $(FLOPPY) -v
 	sudo umount $(FLOPPY)
 
-$(BOOT_BIN): $(BOOT)
-	$(ASM) -o $@ $<
+$(BOOT_BIN):
+	$(ASM) boot/$(BOOT) -o $(BOOT_BIN)
 
-$(LOADER_BIN): $(LOADER)
-	$(ASM) -o $@ $<
+$(LOADER_BIN):
+	$(ASM) loader/$(LOADER) -o $(LOADER_BIN)
 
 $(KERNEL_BIN):
 	nasm -f elf kernel/kernel.asm -o kernel/kernel.o 

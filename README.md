@@ -40,6 +40,7 @@ make run-bochs(or make run-qemu)
 > [b站 从零开始编写操作系统](https://space.bilibili.com/5090346)  
 > [b站 (兰州大学开源社区)从零开始编写操作系统](https://www.bilibili.com/video/BV14J411R7iz)  
 > [oranges一个操作系统的实现](https://www.amazon.cn/dp/B00FF1Y9AQ)  
+> [使用调色板绘制系统界面](https://www.jianshu.com/p/c4856ec3313f)
 
 
 ##### mem layout  
