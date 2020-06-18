@@ -36,7 +36,7 @@ $(KERNEL_BIN):
 
 clean:
 	- @rm -rf $(BOOT_BIN)
-	- @rm -rf $(LOADER_BIN)
+	- @rm -rf loader.bin
 	- @rm -rf kernel/*.o
-	- @rm -rf $(KERNEL_BIN)
+	- @rm -rf kernel.bin
 	- @rm -rf $(IMG)

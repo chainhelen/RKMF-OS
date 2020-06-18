@@ -17,10 +17,10 @@ SectorNoOfRootDirectory	equ	19		; 	Root	Directory 的第一扇区号
 SectorNoOfFAT1			equ	1		;	FAT1的第一个扇区号 = BPB_RsvdSecCnt
 DeltaSectorNo			equ	17		;	DeltaSectorNo = BPB_RsvdSecCnt + (BPB_NumFATs * FATSz) - 2
 									;	文件的开始Sector号 = DirEntry中的开始Sector号 + 根目录占用Sector数目 + DeltaSectorNo
-jmp	short LABEL_START
+
+jmp		LABEL_START
 
 LABEL_START:
-	jmp 	$
 	mov	ax,	cs
 	mov	ds,	ax
 	mov	es,	ax
@@ -283,7 +283,66 @@ ConstructGdt:
 	mov	dword	[es:0x2c],0x00409600
 	ret
 
+SetColor:
+	call	setmode2
+	call 	setcolorindex
+	ret
+
+setmode:
+    mov  bx,0x4105    ;设置图形模式：1024×768 256色
+    mov  ax,0x4f02
+    int  10h
+    ret
+
+setmode2:
+	mov AX,4F02H
+	mov BX,4105H       
+	int 10h
+	ret
+
+setcolorindex:
+	jmp	$
+	mov	cx, 5 ; 注意 cx跟下面个数一致，RGB因为压栈，所以是倒着的
+
+	push	35	; 	B分量
+	push	0	;	G分量
+	push	0 	;	R分量
+
+	push	63	; 	B分量
+	push	63	;	G分量
+	push	63 	;	R分量
+
+	push	63	; 	B分量
+	push	0	;	G分量
+	push	0 	;	R分量
+
+	push	30	; 	B分量
+	push	30	;	G分量
+	push	0 	;	R分量
+
+	push	0	; 	B分量
+	push	0	;	G分量
+	push	0 	;	R分量
+
+	mov	bl,	0
+singleset:
+	mov dx,  	0x03c8		; 设置调色板功能端口
+	mov	al, 	bl
+	out dx,		al			; 建调色板索引0号
+	mov dx,  	0x03c9    	; 设置调色板颜色端口
+	pop	ax
+	out	dx,		al
+	pop	ax
+	out	dx,		al
+	pop	ax
+	out	dx,		al
+	inc			bl
+	loop		singleset
+	ret
+
 preprotectmode:
+	; 设置调色板
+	call 	SetColor
 	call	ConstructGdt
 	; 打开地址线A20
 	in 	al,0x92
@@ -317,11 +376,11 @@ inprotectmode:
     ; 显卡选择子
 	mov		ax, 	0x18
 	mov		gs,		ax
+	; 栈底位置
 	mov		esp,	BaseOfStack
 
 	call	InitKernel
 	
-	jmp		$
 	jmp		0x0008:KernelEntryPointPhyAddr
 
 ; InitKernel ---------------------------------------------------------------------------------
