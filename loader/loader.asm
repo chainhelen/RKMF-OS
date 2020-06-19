@@ -284,24 +284,23 @@ ConstructGdt:
 	ret
 
 SetColor:
-	call	setmode2
+	call	setmode
 	call 	setcolorindex
 	ret
 
 setmode:
-    mov  bx,0x4105    ;设置图形模式：1024×768 256色
-    mov  ax,0x4f02
-    int  10h
+	mov ah,0h
+	mov al,13h         ;320*200
+	int 10h
     ret
 
 setmode2:
-	mov AX,4F02H
-	mov BX,4105H       
+	mov ax,4f02h ;设置图形模式：1024×768 256色
+	mov bx,4105h
 	int 10h
 	ret
 
 setcolorindex:
-	jmp	$
 	mov	cx, 5 ; 注意 cx跟下面个数一致，RGB因为压栈，所以是倒着的
 
 	push	35	; 	B分量
