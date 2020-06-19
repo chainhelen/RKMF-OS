@@ -14,7 +14,7 @@
 ##### On linux
 1. Need to install tools below (`apt-install ${tool}` if ubuntu)
 ```
-bochs(or qemu), bximage, ld, nasm, gcc
+bochs(or qemu), bximage, ld, nasm, gcc, make
 ```
 
 2. Build
@@ -33,6 +33,10 @@ make run-bochs(or make run-qemu)
 
 ###### on branch `linearleaf`
 ![linearleaf.png](image/linearleaf.png)
+
+
+###### on branch `simplewindows`
+![simplewindows.png](image/simplewindows.png)
 
 
 ### Reference

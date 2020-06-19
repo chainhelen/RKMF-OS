@@ -303,25 +303,25 @@ setmode2:
 setcolorindex:
 	mov	cx, 5 ; 注意 cx跟下面个数一致，RGB因为压栈，所以是倒着的
 
-	push	35	; 	B分量
-	push	0	;	G分量
-	push	0 	;	R分量
+	push	0		; 	B分量
+	push	0		;	G分量
+	push	0 		;	R分量
 
-	push	63	; 	B分量
-	push	63	;	G分量
-	push	63 	;	R分量
+	push	0x84/4	; 	B分量
+	push	0x84/4	;	G分量
+	push	0x84/4	;	R分量
 
-	push	63	; 	B分量
-	push	0	;	G分量
-	push	0 	;	R分量
+	push	0xff/4	; 	B分量
+	push	0xff/4	;	G分量
+	push	0xff/4	;	R分量
 
-	push	30	; 	B分量
-	push	30	;	G分量
-	push	0 	;	R分量
+	push	0xc6/4	; 	B分量
+	push	0xc6/4	;	G分量
+	push	0xc6/4	;	R分量
 
-	push	0	; 	B分量
-	push	0	;	G分量
-	push	0 	;	R分量
+	push	0x84/4	; 	B分量
+	push	0x84/4	;	G分量
+	push	0 		;	R分量
 
 	mov	bl,	0
 singleset:
