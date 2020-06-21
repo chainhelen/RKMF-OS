@@ -31,8 +31,11 @@ $(LOADER_BIN):
 
 $(KERNEL_BIN):
 	nasm -f elf kernel/kernel.asm -o kernel/kernel.o 
-	gcc -m32 -c -fno-builtin kernel/cstart.c -o kernel/cstart.o
-	ld -m elf_i386 -s -Ttext 0x30400  kernel/kernel.o kernel/cstart.o -o kernel.bin
+	gcc -m32 -c -w -fno-builtin kernel/cstart.c -o kernel/cstart.o
+	gcc	-m32 -c -w -fno-builtin kernel/windows.c -o kernel/windows.o
+	gcc	-m32 -c -w -fno-builtin kernel/idt.c -o kernel/idt.o
+	# 话说这不知道链接器ld已经识别_start作为入口了，为什么 kernerl.o还要放在第一位，否则不知道跳到那里去了
+	ld -m elf_i386 -s -Ttext 0x30400 kernel/kernel.o  kernel/idt.o kernel/windows.o kernel/cstart.o -o kernel.bin
 
 clean:
 	- @rm -rf $(BOOT_BIN)
@@ -40,3 +43,4 @@ clean:
 	- @rm -rf kernel/*.o
 	- @rm -rf kernel.bin
 	- @rm -rf $(IMG)
+	- @rm -rf *.swp
