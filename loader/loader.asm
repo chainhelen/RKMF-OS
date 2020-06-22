@@ -283,65 +283,21 @@ ConstructGdt:
 	mov	dword	[es:0x2c],0x00409600
 	ret
 
-SetColor:
-	call	setmode
-	call 	setcolorindex
-	ret
-
-setmode:
+Setmode:
 	mov ah,0h
 	mov al,13h         ;320*200
 	int 10h
     ret
 
-setmode2:
+Setmode2:
 	mov ax,4f02h ;设置图形模式：1024×768 256色
 	mov bx,4105h
 	int 10h
 	ret
 
-setcolorindex:
-	mov	cx, 5 ; 注意 cx跟下面个数一致，RGB因为压栈，所以是倒着的
-
-	push	0		; 	B分量
-	push	0		;	G分量
-	push	0 		;	R分量
-
-	push	0x84/4	; 	B分量
-	push	0x84/4	;	G分量
-	push	0x84/4	;	R分量
-
-	push	0xff/4	; 	B分量
-	push	0xff/4	;	G分量
-	push	0xff/4	;	R分量
-
-	push	0xc6/4	; 	B分量
-	push	0xc6/4	;	G分量
-	push	0xc6/4	;	R分量
-
-	push	0x84/4	; 	B分量
-	push	0x84/4	;	G分量
-	push	0 		;	R分量
-
-	mov	bl,	0
-singleset:
-	mov dx,  	0x03c8		; 设置调色板功能端口
-	mov	al, 	bl
-	out dx,		al			; 建调色板索引0号
-	mov dx,  	0x03c9    	; 设置调色板颜色端口
-	pop	ax
-	out	dx,		al
-	pop	ax
-	out	dx,		al
-	pop	ax
-	out	dx,		al
-	inc			bl
-	loop		singleset
-	ret
-
 preprotectmode:
 	; 设置调色板
-	; call 	SetColor
+	call 	Setmode
 	call	ConstructGdt
 	; 打开地址线A20
 	in 	al,0x92

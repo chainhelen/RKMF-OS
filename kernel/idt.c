@@ -1,7 +1,6 @@
-typedef	unsigned int		u32;
-typedef	unsigned short		u16;
-typedef	unsigned char		u8;
-#define 	IDT_SIZE 	256
+#include "idt.h"
+#include "font.h"
+
 /* 门描述符 */
 typedef struct s_gate
 {
@@ -63,38 +62,6 @@ void init_8259A()
 	/* Slave  8259, OCW1.  */
 	out_byte(0xA1,	0xFF);
 }
-
-/* 权限 */
-#define	PRIVILEGE_KRNL	0
-#define	PRIVILEGE_TASK	1
-#define	PRIVILEGE_USER	3
-
-/* 中断向量 */
-#define	INT_VECTOR_DIVIDE		0x0
-#define	INT_VECTOR_DEBUG		0x1
-#define	INT_VECTOR_NMI			0x2
-#define	INT_VECTOR_BREAKPOINT		0x3
-#define	INT_VECTOR_OVERFLOW		0x4
-#define	INT_VECTOR_BOUNDS		0x5
-#define	INT_VECTOR_INVAL_OP		0x6
-#define	INT_VECTOR_COPROC_NOT		0x7
-#define	INT_VECTOR_DOUBLE_FAULT		0x8
-#define	INT_VECTOR_COPROC_SEG		0x9
-#define	INT_VECTOR_INVAL_TSS		0xA
-#define	INT_VECTOR_SEG_NOT		0xB
-#define	INT_VECTOR_STACK_FAULT		0xC
-#define	INT_VECTOR_PROTECTION		0xD
-#define	INT_VECTOR_PAGE_FAULT		0xE
-#define	INT_VECTOR_COPROC_ERR		0x10
-#define	DA_386CGate		0x8C	/* 386 调用门类型值			*/
-#define	DA_386IGate		0x8E	/* 386 中断门类型值			*/
-#define	DA_386TGate		0x8F	/* 386 陷阱门类型值			*/
-
-/* 中断向量 */
-#define	INT_VECTOR_IRQ0			0x20
-#define	INT_VECTOR_IRQ8			0x28
-
-typedef	void	(*int_handler)	();
 /* 中断处理函数 */
 void	divide_error();
 void	single_step_exception();
@@ -114,7 +81,7 @@ void	page_fault();
 void	copr_error();
 void    hwint00();
 // void    hwint01();
-void   	keyservice();
+void   	asm_keyboardhandler();
 void    hwint02();
 void    hwint03();
 void    hwint04();
@@ -125,7 +92,8 @@ void    hwint08();
 void    hwint09();
 void    hwint10();
 void    hwint11();
-void    hwint12();
+// void    hwint12();
+void    mouseservice();
 void    hwint13();
 void    hwint14();
 void    hwint15();
@@ -185,11 +153,11 @@ void init_idt_all_esc()
 	init_idt_desc(INT_VECTOR_IRQ0 + 0,      DA_386IGate,
 			hwint00,                  PRIVILEGE_KRNL);
 
+	// 键盘中断
 	// init_idt_desc(INT_VECTOR_IRQ0 + 1,      DA_386IGate,
 	// 		hwint01,                  PRIVILEGE_KRNL);
-	
 	init_idt_desc(INT_VECTOR_IRQ0 + 1,      DA_386IGate,
-			keyservice,                  PRIVILEGE_KRNL);
+			asm_keyboardhandler,      PRIVILEGE_KRNL);
 
 	init_idt_desc(INT_VECTOR_IRQ0 + 2,      DA_386IGate,
 			hwint02,                  PRIVILEGE_KRNL);
@@ -221,8 +189,10 @@ void init_idt_all_esc()
 	init_idt_desc(INT_VECTOR_IRQ8 + 3,      DA_386IGate,
 			hwint11,                  PRIVILEGE_KRNL);
 
+	// init_idt_desc(INT_VECTOR_IRQ8 + 4,      DA_386IGate,
+	// 		hwint12,                  PRIVILEGE_KRNL);
 	init_idt_desc(INT_VECTOR_IRQ8 + 4,      DA_386IGate,
-			hwint12,                  PRIVILEGE_KRNL);
+	 		mouseservice,             PRIVILEGE_KRNL);
 
 	init_idt_desc(INT_VECTOR_IRQ8 + 5,      DA_386IGate,
 			hwint13,                  PRIVILEGE_KRNL);
@@ -257,3 +227,4 @@ void spurious_irq(int irq)
         // disp_int(irq);
         // disp_str("\n");
 }
+

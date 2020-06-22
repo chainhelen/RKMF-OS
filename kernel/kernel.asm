@@ -20,6 +20,7 @@ global  page_fault;
 global  copr_error;
 global  hwint00;
 ; global  hwint01;
+global	asm_keyboardhandler;
 global  hwint02;
 global  hwint03;
 global  hwint04;
@@ -30,8 +31,8 @@ global  hwint08;
 global  hwint09;
 global  hwint10;
 global  hwint11;
-global	keyservice;
-global  hwint12;
+; global  hwint12;
+global  mouseservice;
 global  hwint13;
 global  hwint14;
 global  hwint15;
@@ -39,6 +40,7 @@ global  hwint15;
 extern	spurious_irq
 extern 	cstart	;	导入	cstart
 extern	idt_ptr	;	导入	idt的指针
+extern 	keyboardhandler;
 
 _start:	; 跳到这里来的时候，我们假设 gs 指向显存
 	; 	mov ax, ds 这行指令没什么用处，只是为了调试时候看到对应指令
@@ -108,46 +110,17 @@ KeyboardIOInterruptMsgLength	equ		23
 KeyboardIOInterruptMsg			db 		"keyboard io interrupt: "
 
 ALIGN   16
-keyservice:
+asm_keyboardhandler:
 	cli ;应禁止中断
-	mov	cx, KeyboardIOInterruptMsgLength
-	mov	ebx, 0
-keyboardiodisplay:
-	push ebx ; 寄存器不够用，压栈一下
-	mov	eax, 2
-	mul	ebx
-	add	eax, 0xb8000+15*160 ; 第15行
-	mov	edx, KeyboardIOInterruptMsg
-	add	edx, ebx
-	mov	bl, [edx]
-	mov	byte [eax], bl
-	inc	eax
-	mov	byte [eax], 0x0c
-	pop	ebx
-	inc	ebx
-	loop keyboardiodisplay
-
-	mov al,  0x61
-	out 0x20, al  ;PIC0_OCW2
-	in  al,  0x60  ;从键盘读入按键扫描码
-
-	push eax
-	mov	eax, 2
-	mul	ebx
-	add	eax, 0xb8000+15*160 ; 第15行
-	mov	ebx, eax
-	pop	eax
-
-	mov byte [ebx], al
-	inc	ebx
-	mov byte [ebx],0x0F
-
+	CALL	keyboardhandler
 	mov               al , 0x20  ;告诉硬件,中断处理完毕,即发送 EOI 消息
 	out               0x20 , al
 	out               0xa0 , al
-
 	IRET
 
+ALIGN	16
+mouseservice:
+	IRET
 
 
 ALIGN   16
