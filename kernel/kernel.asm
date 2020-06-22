@@ -104,35 +104,43 @@ hwint00:                ; Interrupt routine for irq 0 (the clock).
 ; hwint01:                ; Interrupt routine for irq 1 (keyboard)
 ;        hwint_master    1
 
+KeyboardIOInterruptMsgLength	equ		23
+KeyboardIOInterruptMsg			db 		"keyboard io interrupt: "
+
 ALIGN   16
 keyservice:
 	cli ;应禁止中断
-	mov byte [0xb8000+24*160+0x00],'I'
-	mov byte [0xb8000+24*160+0x01],0x0c
-	mov byte [0xb8000+24*160+0x02],'n'
-	mov byte [0xb8000+24*160+0x03],0x0c
-	mov byte [0xb8000+24*160+0x04],'t'
-	mov byte [0xb8000+24*160+0x05],0x0c
-	mov byte [0xb8000+24*160+0x06],':'
-	mov byte [0xb8000+24*160+0x07],0x0c
-	mov byte [0xb8000+24*160+0x08],'O'
-	mov byte [0xb8000+24*160+0x09],0x0c
-	mov byte [0xb8000+24*160+0x0a],'K'
-	mov byte [0xb8000+24*160+0x0b],0x0c
-	mov byte [0xb8000+24*160+0x0c],'!'
-	mov byte [0xb8000+24*160+0x0d],0x0c
-	mov byte [0xb8000+24*160+0x0e],'-'
-	mov byte [0xb8000+24*160+0x0f],0x0c
-	mov byte [0xb8000+24*160+0x10],'-'
-	mov byte [0xb8000+24*160+0x11],0x0c
+	mov	cx, KeyboardIOInterruptMsgLength
+	mov	ebx, 0
+keyboardiodisplay:
+	push ebx ; 寄存器不够用，压栈一下
+	mov	eax, 2
+	mul	ebx
+	add	eax, 0xb8000+15*160 ; 第15行
+	mov	edx, KeyboardIOInterruptMsg
+	add	edx, ebx
+	mov	bl, [edx]
+	mov	byte [eax], bl
+	inc	eax
+	mov	byte [eax], 0x0c
+	pop	ebx
+	inc	ebx
+	loop keyboardiodisplay
 
 	mov al,  0x61
 	out 0x20, al  ;PIC0_OCW2
 	in  al,  0x60  ;从键盘读入按键扫描码
-	jmp		$
 
-	mov byte [0xb8000+24*160+0x12],al
-	mov byte [0xb8000+24*160+0x13],0x0c
+	push eax
+	mov	eax, 2
+	mul	ebx
+	add	eax, 0xb8000+15*160 ; 第15行
+	mov	ebx, eax
+	pop	eax
+
+	mov byte [ebx], al
+	inc	ebx
+	mov byte [ebx],0x0F
 
 	mov               al , 0x20  ;告诉硬件,中断处理完毕,即发送 EOI 消息
 	out               0x20 , al

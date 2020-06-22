@@ -341,7 +341,7 @@ singleset:
 
 preprotectmode:
 	; 设置调色板
-	call 	SetColor
+	; call 	SetColor
 	call	ConstructGdt
 	; 打开地址线A20
 	in 	al,0x92

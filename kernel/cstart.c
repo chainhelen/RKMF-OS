@@ -4,6 +4,6 @@
 
 void cstart(void) 
 {
-	drawAllWindows();
+	// drawAllWindows();
 	initIdt();
 }
