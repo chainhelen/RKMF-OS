@@ -11,7 +11,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 
 void init_screen(char *vram, int x, int y)
 {
-	boxfill8(vram, x, COL8_3366CC,  0,     0,      x -  1, y - 29);
+	boxfill8(vram, x, COL8_008484,  0,     0,      x -  1, y - 29);
 	boxfill8(vram, x, COL8_C6C6C6,  0,     y - 28, x -  1, y - 28);
 	boxfill8(vram, x, COL8_FFFFFF,  0,     y - 27, x -  1, y - 27);
 	boxfill8(vram, x, COL8_C6C6C6,  0,     y - 26, x -  1, y -  1);
@@ -46,7 +46,7 @@ static void set_palette(int start, int end, unsigned char *rgb)
 
 void init_palette(void)
 {
-	static unsigned char table_rgb[18 * 3] = {
+	static unsigned char table_rgb[19 * 3] = {
 		0x00, 0x00, 0x00,	/*  0 */
 		0xff, 0x00, 0x00,	/*  1 */
 		0x00, 0xff, 0x00,	/*  2 */
@@ -64,10 +64,10 @@ void init_palette(void)
 		0x00, 0x84, 0x84,   /* 14 */
 		0x84, 0x84, 0x84,	/* 15 */
 		0x33, 0x66, 0xcc,	/* 16 */
-		0x33, 0x66, 0x99	/* 17 */
-
+		0x33, 0x66, 0x99,	/* 17 */
+        0x00, 0x84, 0x84	/* 18 */
 	};
-	set_palette(0, 17, table_rgb);
+	set_palette(0, 18, table_rgb);
 }
 
 

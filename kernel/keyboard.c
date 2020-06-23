@@ -33,7 +33,6 @@ void wait_KBC_sendready(void)
 
 void init_keyboard(void)
 {
-
 	wait_KBC_sendready();
 	out_byte(PORT_KEYCMD, KEYCMD_WRITE_MODE);
 	wait_KBC_sendready();

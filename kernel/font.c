@@ -1,20 +1,19 @@
 #include "font.h"
 
+// 看起来原文中的hankaku是可以按位做压缩，因为每一行只有两种状态，而且刚好8个位置
+// 因为不想有太多黑盒，所以按照自己的方式生成了hankaku.c文件
 static void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 {
-	int i;
-	char *p, d /* data */;
+	int i, j;
+	char *p, d 		/* data */;
 	for (i = 0; i < 16; i++) {
-		p = vram + (y + i) * xsize + x;
-		d = font[i];
-		if ((d & 0x80) != 0) { p[0] = c; }
-		if ((d & 0x40) != 0) { p[1] = c; }
-		if ((d & 0x20) != 0) { p[2] = c; }
-		if ((d & 0x10) != 0) { p[3] = c; }
-		if ((d & 0x08) != 0) { p[4] = c; }
-		if ((d & 0x04) != 0) { p[5] = c; }
-		if ((d & 0x02) != 0) { p[6] = c; }
-		if ((d & 0x01) != 0) { p[7] = c; }
+		for (j = 0;j < 8;j++) {
+			p = vram + (y + i) * xsize + x + j;
+			d = font[i * 8 + j];
+			if (d == '*') {
+				p[0] = c;
+			}
+		}
 	}
 }
 

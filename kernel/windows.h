@@ -19,6 +19,7 @@
 #define COL8_848484		15
 #define COL8_3366CC		16
 #define COL8_336699		17
+#define COL8_008484		18
 
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
