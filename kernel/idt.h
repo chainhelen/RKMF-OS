@@ -1,7 +1,7 @@
 typedef	unsigned int		u32;
 typedef	unsigned short		u16;
 typedef	unsigned char		u8;
-#define 	IDT_SIZE 	256
+#define 	IDT_SIZE 		256
 
 /* 权限 */
 #define	PRIVILEGE_KRNL	0

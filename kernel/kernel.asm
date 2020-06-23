@@ -113,9 +113,9 @@ ALIGN   16
 asm_keyboardhandler:
 	cli ;应禁止中断
 	CALL	keyboardhandler
-	mov               al , 0x20  ;告诉硬件,中断处理完毕,即发送 EOI 消息
-	out               0x20 , al
-	out               0xa0 , al
+	mov     al , 0x20  ;告诉硬件,中断处理完毕,即发送 EOI 消息
+	out     0x20 , al
+	out     0xa0 , al
 	IRET
 
 ALIGN	16

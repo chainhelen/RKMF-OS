@@ -26,4 +26,10 @@ void init_screen(char *vram, int x, int y);
 void init_palette(void);
 void line(char *vram,int xsize,int y,char c);
 
+#define BOOTBASE      0x6000
+struct BOOTINFO {
+	short scrnx, scrny;
+	char *vram;
+};
+
 #endif

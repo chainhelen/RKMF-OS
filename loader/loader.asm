@@ -289,15 +289,41 @@ Setmode:
 	int 10h
     ret
 
+BOOTBASE   	EQU         0x6000  
+SCRNX		EQU			BOOTBASE    	;分辨率X, 1024
+SCRNY		EQU			BOOTBASE+2     	;分辨率Y, 768
+VRAM		EQU			BOOTBASE+4     	;存放各种显示模式下的显存地址
+
 Setmode2:
-	mov ax,4f02h ;设置图形模式：1024×768 256色
+	mov ax,4f02h 		;设置图形模式：1024×768 256色
 	mov bx,4105h
 	int 10h
+	
+	push	es
+	mov		ax, 0
+	mov		es, ax
+	; 获取高清显卡地址
+	mov di,	0x6000 ;	BIOS中断获取显卡线性地址,暂存0x6000+40处
+	mov ax,	0x4f01
+	mov cx,	0x101
+	int    	0x10
+
+	;显卡线性地址：返回结构体中偏移量40的地方，即es:di+40处，用4字节 ;dw[ es:di+40 ]低位,[ es:di+42 ]高位，一般是: 0xe000_0000
+	mov ebx,		[es:di+40]      ;es=0,di=0x6000
+	mov [es:VRAM],	ebx           	;最终存在[VRAM],后面创建GDT也需要使用
+	
+	mov	ax, 1024
+	mov	[es:SCRNX], ax
+	mov	ax, 768
+	mov	[es:SCRNY], ax
+
+	pop		es
+	
 	ret
 
 preprotectmode:
 	; 设置调色板
-	call 	Setmode
+	call 	Setmode2
 	call	ConstructGdt
 	; 打开地址线A20
 	in 	al,0x92

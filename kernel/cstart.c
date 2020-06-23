@@ -1,10 +1,6 @@
 #include "windows.h"
 #include "idt.h"
 
-#define   Displayaddr       0xa0000
-#define   xsize             320
-#define   ysize             200
-
 void cstart(void) 
 {
 	initIdt();
@@ -13,8 +9,9 @@ void cstart(void)
 
 void desktop(void)
 {
+	struct BOOTINFO *binfo = (struct BOOTINFO *) BOOTBASE;
 	init_palette();
-	init_screen((char *)Displayaddr, xsize, ysize);
-	putfonts8_asc((char *)Displayaddr, xsize, 10, 40, COL8_FFFFFF, "RKMF OS");
-	line((char *)Displayaddr, xsize, 60, 7);
+	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 30, 60, COL8_FFFFFF, "RKMF OS");
+	line(binfo->vram, binfo->scrnx, 80, COL8_FFFFFF);
 }
