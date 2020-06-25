@@ -46,7 +46,8 @@ make run-bochs(or make run-qemu)
 ###### on branch `font`
 ![font.png](image/font.png)
 
-###### on branch `mouseiointerrupt`
+###### on branch `mouseiointerrupt`  
+(1024 * 768)  
 ![mouseiointerrupt.png](image/mouseiointerrupt.png)
 
 
