@@ -354,6 +354,8 @@ inprotectmode:
 	mov		ax, 	0x10
 	mov		ds, 	ax
 	mov		es, 	ax
+	mov		ss,		ax
+	mov		fs,		ax
     ; 显卡选择子
 	mov		ax, 	0x18
 	mov		gs,		ax

@@ -1,16 +1,30 @@
 #include "fifo.h"
+#include "keyboard.h"
+#include "windows.h"
 
 struct	FIFO8	keyfifo;
+#define BOOTBASE      0x6000
 
-#define PIC0_OCW2				0x0020
-#define PORT_KEYDAT				0x0060
-#define PORT_KEYCMD				0x0064
+void mergeKeyboardMsg(char *s, char *p, int data) 
+{
+	for (; *p != '\0';p++) 
+	{
+		*s = *p;
+		s++;
+	}
 
-#define PORT_KEYSTA				0x0064
+	int x = data / 16;
+	int y = data % 16;
 
-#define KEYSTA_SEND_NOTREADY	0x02
-#define KEYCMD_WRITE_MODE		0x60
-#define KBC_MODE				0x47
+	char *mp = "0123456789ABCDEF";
+
+	*s = mp[x];
+	s++;
+	*s = mp[y];
+	s++;
+
+	*s = '\0';
+}
 
 void keyboardhandler(void)
 {
@@ -24,9 +38,9 @@ void wait_KBC_sendready(void)
 {
 
 	for (;;) {
-		if ((out_byte(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
+		 if ((in_byte(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
 			break;
-		}
+		 }
 	}
 	return;
 }
@@ -39,3 +53,4 @@ void init_keyboard(void)
 	out_byte(PORT_KEYDAT, KBC_MODE);
 	return;
 }
+

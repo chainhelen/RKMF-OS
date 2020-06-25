@@ -19,7 +19,7 @@ typedef struct s_gate
 u8		idt_ptr[6];	/* 0~15:Limit  16~47:Base */
 GATE   	idt[IDT_SIZE];
 
-void initIdt() 
+void init_idt() 
 {
 	u16* p_idt_limit = (u16*)(&idt_ptr[0]);
 	u32* p_idt_base  = (u32*)(&idt_ptr[2]);
@@ -56,11 +56,14 @@ void init_8259A()
 	/* Slave  8259, ICW4. */
 	out_byte(0xA1,	0x1);
 
+	// 这个地方是个坑，1代表代表关闭，0代表开启
 	/* Master 8259, OCW1.  */
-	out_byte(0x21,	0xFD);
+	// out_byte(0x21,	0xFD);
+	out_byte(0x21,	0xF9);
 
 	/* Slave  8259, OCW1.  */
-	out_byte(0xA1,	0xFF);
+	// out_byte(0xA1,	0xFF);
+	out_byte(0xA1,	0xEF);
 }
 /* 中断处理函数 */
 void	divide_error();
@@ -93,7 +96,7 @@ void    hwint09();
 void    hwint10();
 void    hwint11();
 // void    hwint12();
-void    mouseservice();
+void    asm_mousehandler();
 void    hwint13();
 void    hwint14();
 void    hwint15();
@@ -192,7 +195,7 @@ void init_idt_all_esc()
 	// init_idt_desc(INT_VECTOR_IRQ8 + 4,      DA_386IGate,
 	// 		hwint12,                  PRIVILEGE_KRNL);
 	init_idt_desc(INT_VECTOR_IRQ8 + 4,      DA_386IGate,
-	 		mouseservice,             PRIVILEGE_KRNL);
+	 		asm_mousehandler,             PRIVILEGE_KRNL);
 
 	init_idt_desc(INT_VECTOR_IRQ8 + 5,      DA_386IGate,
 			hwint13,                  PRIVILEGE_KRNL);

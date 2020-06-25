@@ -32,24 +32,29 @@ global  hwint09;
 global  hwint10;
 global  hwint11;
 ; global  hwint12;
-global  mouseservice;
+global  asm_mousehandler;
 global  hwint13;
 global  hwint14;
 global  hwint15;
+global 	io_hlt
+global	io_cli
+global	io_sti
+global  io_stihlt
+global  io_loop
+global	load_idt_reg
 
 extern	spurious_irq
 extern 	cstart	;	导入	cstart
 extern	idt_ptr	;	导入	idt的指针
 extern 	keyboardhandler;
+extern  mousehandler
 
 _start:	; 跳到这里来的时候，我们假设 gs 指向显存
 	; 	mov ax, ds 这行指令没什么用处，只是为了调试时候看到对应指令
 	mov		ax, ds
 	call 	cstart
-
-	lidt	[idt_ptr]
-	sti		; 开中断
 	jmp		$
+	mov		ax, ds
 
 ; ========================================================================
 ;                  void out_byte(u16 port, u8 value);
@@ -58,10 +63,6 @@ out_byte:
 	mov	edx, [esp + 4]		; port
 	mov	al, [esp + 4 + 4]	; value
 	out	dx, al
-	nop	; 一点延迟
-	nop
-	nop
-	nop
 	ret
 
 ; ========================================================================
@@ -71,10 +72,6 @@ in_byte:
 	mov	edx, [esp + 4]		; port
 	xor	eax, eax
 	in	al, dx
-	nop	; 一点延迟
-	nop
-	nop
-	nop
 	ret
 
 ; 中断和异常 -- 硬件中断
@@ -112,14 +109,17 @@ KeyboardIOInterruptMsg			db 		"keyboard io interrupt: "
 ALIGN   16
 asm_keyboardhandler:
 	cli ;应禁止中断
+	; mov		ax, 000
 	CALL	keyboardhandler
-	mov     al , 0x20  ;告诉硬件,中断处理完毕,即发送 EOI 消息
-	out     0x20 , al
-	out     0xa0 , al
+	; mov     al , 0x20  ;告诉硬件,中断处理完毕,即发送 EOI 消息
+	; out     0x20 , al
+	; out     0xa0 , al
 	IRET
 
 ALIGN	16
-mouseservice:
+asm_mousehandler:
+	cli	; 应禁止中断
+	CALL	mousehandler
 	IRET
 
 
@@ -181,23 +181,24 @@ hwint15:                ; Interrupt routine for irq 15
 
 ; 中断和异常 -- 异常
 divide_error:
-	mov byte [0xb8000+23*160+0x00],'d'
-	mov byte [0xb8000+23*160+0x01],0x0c
-	mov byte [0xb8000+23*160+0x02],'i'
-	mov byte [0xb8000+23*160+0x03],0x0c
-	mov byte [0xb8000+23*160+0x04],'v'
-	mov byte [0xb8000+23*160+0x05],0x0c
-	mov byte [0xb8000+23*160+0x06],'e'
-	mov byte [0xb8000+23*160+0x07],0x0c
-	mov byte [0xb8000+23*160+0x08],'r'
-	mov byte [0xb8000+23*160+0x09],0x0c
-	mov byte [0xb8000+23*160+0x0a],'r'
-	mov byte [0xb8000+23*160+0x0b],0x0c
-	mov byte [0xb8000+23*160+0x0c],'o'
-	mov byte [0xb8000+23*160+0x0d],0x0c
-	mov byte [0xb8000+23*160+0x0e],'r'
-	mov byte [0xb8000+23*160+0x0f],0x0c
-	IRET
+	; mov byte [0xb8000+23*160+0x00],'d'
+	; mov byte [0xb8000+23*160+0x01],0x0c
+	; mov byte [0xb8000+23*160+0x02],'i'
+	; mov byte [0xb8000+23*160+0x03],0x0c
+	; mov byte [0xb8000+23*160+0x04],'v'
+	; mov byte [0xb8000+23*160+0x05],0x0c
+	; mov byte [0xb8000+23*160+0x06],'e'
+	; mov byte [0xb8000+23*160+0x07],0x0c
+	; mov byte [0xb8000+23*160+0x08],'r'
+	; mov byte [0xb8000+23*160+0x09],0x0c
+	; mov byte [0xb8000+23*160+0x0a],'r'
+	; mov byte [0xb8000+23*160+0x0b],0x0c
+	; mov byte [0xb8000+23*160+0x0c],'o'
+	; mov byte [0xb8000+23*160+0x0d],0x0c
+	; mov byte [0xb8000+23*160+0x0e],'r'
+	; mov byte [0xb8000+23*160+0x0f],0x0c
+	; IRET
+	hlt
 single_step_exception:
 	hlt
 nmi:
@@ -228,3 +229,28 @@ page_fault:
 	hlt
 copr_error:
 	hlt
+
+io_hlt:
+		HLT
+		RET
+
+io_cli:
+		CLI
+		RET
+
+io_sti:
+		STI
+		RET
+
+io_stihlt:
+		STI
+		HLT
+		RET
+
+io_loop:
+	jmp		$
+	RET
+
+load_idt_reg:
+	lidt	[idt_ptr]
+	RET

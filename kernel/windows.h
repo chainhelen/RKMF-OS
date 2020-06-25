@@ -25,6 +25,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 void init_screen(char *vram, int x, int y);
 void init_palette(void);
 void line(char *vram,int xsize,int y,char c);
+void putblock8_8(char *vram, int vxsize, int pxsize,int pysize, int px0, int py0, char *buf, int bxsize);
 
 #define BOOTBASE      0x6000
 struct BOOTINFO {
