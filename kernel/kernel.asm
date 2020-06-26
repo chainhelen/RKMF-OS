@@ -32,16 +32,17 @@ global  hwint09;
 global  hwint10;
 global  hwint11;
 ; global  hwint12;
-global  asm_mousehandler;
-global  hwint13;
-global  hwint14;
-global  hwint15;
+global  asm_mousehandler
+global  hwint13
+global  hwint14
+global  hwint15
 global 	io_hlt
 global	io_cli
 global	io_sti
 global  io_stihlt
 global  io_loop
 global	load_idt_reg
+global 	asm_memtest
 
 extern	spurious_irq
 extern 	cstart	;	导入	cstart
@@ -254,3 +255,37 @@ io_loop:
 load_idt_reg:
 	lidt	[idt_ptr]
 	RET
+
+
+asm_memtest:
+    PUSH	EDI						; EBX, ESI, EDI
+    PUSH	ESI
+    PUSH	EBX
+    MOV		ESI,0xaa55aa55			; pat0 = 0xaa55aa55;
+    MOV		EDI,0x55aa55aa			; pat1 = 0x55aa55aa;
+    MOV		EAX,[ESP+12+4]			; i = start;
+mts_loop:
+    MOV		EBX,EAX
+    ADD		EBX,0xffc				; p = i + 0xffc;
+    MOV		EDX,[EBX]				; old = *p;
+    MOV		[EBX],ESI				; *p = pat0;
+    XOR		DWORD [EBX],0xffffffff	; *p ^= 0xffffffff;
+    CMP		EDI,[EBX]				; if (*p != pat1) goto fin;
+    JNE		mts_fin
+    XOR		DWORD [EBX],0xffffffff	; *p ^= 0xffffffff;
+    CMP		ESI,[EBX]				; if (*p != pat0) goto fin;
+    JNE		mts_fin
+    MOV		[EBX],EDX				; *p = old;
+    ADD		EAX,0x1000				; i += 0x1000;
+    CMP		EAX,[ESP+12+8]			; if (i <= end) goto mts_loop;
+    JBE		mts_loop
+    POP		EBX
+    POP		ESI
+    POP		EDI
+    RET
+mts_fin:
+    MOV		[EBX],EDX				; *p = old;
+    POP		EBX
+    POP		ESI
+    POP		EDI
+    RET

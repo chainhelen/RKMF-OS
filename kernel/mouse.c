@@ -107,7 +107,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
 	return -1;
 }
 
-void changeIntIntoCharArr(char *m, int x)
+static void changeIntIntoCharArr(char *m, int x)
 {
 	for (int i = 0;i < 4;i++) 
 	{
