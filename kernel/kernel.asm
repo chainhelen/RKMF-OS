@@ -18,7 +18,8 @@ global  stack_exception;
 global  general_protection;
 global  page_fault;
 global  copr_error;
-global  hwint00;
+; global  hwint00;
+global 	asm_timer_handler;
 ; global  hwint01;
 global	asm_keyboardhandler;
 global  hwint02;
@@ -43,12 +44,18 @@ global  io_stihlt
 global  io_loop
 global	load_idt_reg
 global 	asm_memtest
+global  io_load_eflags
+global  io_store_eflags
+global 	load_tr
+global 	farjmp
+
 
 extern	spurious_irq
 extern 	cstart	;	导入	cstart
 extern	idt_ptr	;	导入	idt的指针
 extern 	keyboardhandler;
 extern  mousehandler
+extern  timer_handler
 
 _start:	; 跳到这里来的时候，我们假设 gs 指向显存
 	; 	mov ax, ds 这行指令没什么用处，只是为了调试时候看到对应指令
@@ -97,8 +104,10 @@ in_byte:
 
 ; 中断和异常 -- 硬件中断
 ALIGN   16
-hwint00:                ; Interrupt routine for irq 0 (the clock).
-        hwint_master    0
+asm_timer_handler:                ; Interrupt routine for irq 0 (the clock).
+	cli	; 应禁止中断
+	CALL	timer_handler
+	IRET
 
 ; ALIGN   16
 ; hwint01:                ; Interrupt routine for irq 1 (keyboard)
@@ -289,3 +298,20 @@ mts_fin:
     POP		ESI
     POP		EDI
     RET
+
+io_load_eflags:
+		PUSHFD		; PUSH EFLAGS
+		POP		EAX
+		RET
+
+io_store_eflags:
+		MOV		EAX,[ESP+4]
+		PUSH	EAX
+		POPFD		; POP EFLAGS
+		RET
+load_tr:		; void load_tr(int tr);
+		LTR		[ESP+4]			; tr
+		RET
+farjmp:		; void farjmp(int eip, int cs);
+		JMP		FAR	[ESP+4]				; eip, cs
+		RET

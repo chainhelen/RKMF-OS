@@ -242,7 +242,7 @@ LABEL_GET_FAT_ENRY_OK:
 
 
 dptseg			equ		7e0h
-gdt_size		dw		48-1
+gdt_size		dw		64-1
 gdt_base		dd		0x00007e00
 ;----------------------------------------------------------------------------
 ; 函数名: ConstructGdt
@@ -281,6 +281,14 @@ ConstructGdt:
 	; #5 堆栈描述符：SS
 	mov	dword	[es:0x28],0x00007a00
 	mov	dword	[es:0x2c],0x00409600
+
+	; #6
+	mov	dword	[es:0x34],0x0000ffff
+	mov	dword	[es:0x3C],0x00cf9200
+
+	; #7
+	mov	dword	[es:0x44],0x0000ffff
+	mov	dword	[es:0x4C],0x00cf9200
 	ret
 
 Setmode:

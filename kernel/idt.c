@@ -58,11 +58,11 @@ void init_8259A()
 
 	// 这个地方是个坑，1代表代表关闭，0代表开启
 	/* Master 8259, OCW1.  */
-	// out_byte(0x21,	0xFD);
-	out_byte(0x21,	0xF9);
+	// out_byte(0x21,	0xF9);
+	out_byte(0x21,	0xF8);
 
 	/* Slave  8259, OCW1.  */
-	// out_byte(0xA1,	0xFF);
+	// out_byte(0xA1,	0xEF);
 	out_byte(0xA1,	0xEF);
 }
 /* 中断处理函数 */
@@ -82,7 +82,8 @@ void	stack_exception();
 void	general_protection();
 void	page_fault();
 void	copr_error();
-void    hwint00();
+// void    hwint00();
+void 	asm_timer_handler();
 // void    hwint01();
 void   	asm_keyboardhandler();
 void    hwint02();
@@ -153,8 +154,11 @@ void init_idt_all_esc()
 	init_idt_desc(INT_VECTOR_COPROC_ERR,	DA_386IGate,
 		      copr_error,		PRIVILEGE_KRNL);
 
+//	init_idt_desc(INT_VECTOR_IRQ0 + 0,      DA_386IGate,
+//			hwint00,                  PRIVILEGE_KRNL);
+
 	init_idt_desc(INT_VECTOR_IRQ0 + 0,      DA_386IGate,
-			hwint00,                  PRIVILEGE_KRNL);
+			asm_timer_handler,                  PRIVILEGE_KRNL);
 
 	// 键盘中断
 	// init_idt_desc(INT_VECTOR_IRQ0 + 1,      DA_386IGate,

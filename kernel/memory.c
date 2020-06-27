@@ -90,12 +90,12 @@ void memman_init(MEMMAN *man)
 
 unsigned int memman_total(MEMMAN *man)
 {
-       unsigned int i,t=0;
-       for(i=0;i < man->frees; i++)
-      {
-              t+= man->free[i].size;    //只考虑所有可用内存占得总内存大小，不考虑内存连续（肯定有不连续的）。
-      }
-      return t;
+	unsigned int i,t=0;
+	for(i=0;i < man->frees; i++)
+	{
+		t+= man->free[i].size;    //只考虑所有可用内存占得总内存大小，不考虑内存连续（肯定有不连续的）。
+	}
+	return t;
 }
 
 static void changeIntIntoCharArr(char *m, int x)

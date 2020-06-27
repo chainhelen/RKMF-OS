@@ -1,12 +1,18 @@
 #include "windows.h"
+#include "timer.h"
 #include "keyboard.h"
 #include "mouse.h"
 #include "idt.h"
 #include "sheet.h"
 #include "memory.h"
+#include "task.h"
+
+
+void task_b_main(SHEET *sht_back);
 
 void cstart(void) 
 {
+	init_pit();
 	// 一定要先load idt寄存器然后在desktop
 	// 因为desktop里面有个死循环，否则中断向量表永远不生效
 	init_idt();
@@ -53,6 +59,7 @@ void desktop(void)
 
 	init_screen(buf_back, binfo->scrnx, binfo->scrny);
 	make_window8(buf_win, 160, 68, "windows", 1);
+	make_textbox8(sht_win, 8, 28, 144, 34, COL8_FFFFFF);
 	init_mouse_cursor8(buf_mouse, 99);
 
 	sheet_slide(sht_back, 0, 0);	//桌面背景显示移到（0,0）处
@@ -90,9 +97,34 @@ void desktop(void)
 	sheet_updown(sht_win,   1);
 	sheet_updown(sht_mouse,   2);
 
+	// 定时器
+	struct FIFO8 timerfifo;
+	char timerbuf[8];
+	fifo8_init(&timerfifo, 8, timerbuf);
+	TIMER *a_timer = timer_alloc();
+	timer_init(a_timer, &timerfifo, 1);
+	timer_settime(a_timer, 300);
+
+
+	TASK *task_a, *task_b;
+	// 多任务系统
+	task_a = task_init(memman);
+	task_b = task_alloc();
+	// task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+ 	// task_b->tss.eip = (int) &task_b_main;
+	// task_b->tss.es = 1 * 8;
+	// task_b->tss.cs = 1 * 8;
+	// task_b->tss.ss = 1 * 8;
+	// task_b->tss.ds = 1 * 8;
+	// task_b->tss.fs = 1 * 8;
+	// task_b->tss.gs = 1 * 8;
+	// *((int *) (task_b->tss.esp + 4)) = (int) sht_back;
+	// task_run(task_b);
+
 	 for (;;) 
 	 {
-	 	 if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
+	 	 if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0) {
+			task_sleep(task_a);
 	 	 	io_stihlt();
 	 	 } else {
 	 		 if (fifo8_status(&keyfifo) != 0 ) {
@@ -104,7 +136,7 @@ void desktop(void)
 	 			 boxfill8(buf_back, binfo->scrnx, COL8_008484,  8 * xn, 88, 8 * (xn + 2), 103);
 	 			 putfonts8_asc(buf_back, binfo->scrnx, 0, 88, COL8_FFFFFF, s);
 				 sheet_refresh(sht_back, 8 * xn, 88, 8 * (xn + 2), 103);
-	 		 } else {
+	 		 } else if (fifo8_status(&mousefifo) != 0){
 	 			 int in = fifo8_get(&mousefifo);
 	 			 io_sti();
 	 			 if (mouse_decode(&mdec, in) != 0) {
@@ -149,7 +181,49 @@ void desktop(void)
 	 				 // line(binfo->vram,binfo->scrnx,132,7);
 					 sheet_slide(sht_mouse, mx, my);
 	 			 }
-	 		 }
+	 		 } else if (fifo8_status(&timerfifo) != 0)  {
+				 char i = fifo8_get(&timerfifo); /* 首先读入（为了设定起始点） */
+				 io_sti();
+				 putfonts8_asc(buf_back, binfo->scrnx, 0, 300, COL8_FFFFFF, "3[sec]");
+				 sheet_refresh(sht_back, 0, 300, 56, 324);
+			 }
 	 	 }
 	 }
+}
+
+void task_b_main(SHEET *sht_back)
+{
+	struct FIFO8 fifo;
+	struct TIMER *timer_put, *timer_1s;
+	int i, fifobuf[128], count = 0, count0 = 0;
+	char s[12];
+
+	fifo8_init(&fifo, 128, fifobuf);
+	timer_put = timer_alloc();
+	timer_init(timer_put, &fifo, 1);
+	timer_settime(timer_put, 1);
+	timer_1s = timer_alloc();
+	timer_init(timer_1s, &fifo, 100);
+	timer_settime(timer_1s, 100);
+
+	for (;;) {
+		count++;
+		io_cli();
+		if (fifo8_status(&fifo) == 0) {
+			io_sti();
+		} else {
+			i = fifo8_get(&fifo);
+			io_sti();
+			if (i == 1) {
+				// sprintf(s, "%11d", count);
+				putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
+				timer_settime(timer_put, 1);
+			} else if (i == 100) {
+				// sprintf(s, "%11d", count - count0);
+				putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+				count0 = count;
+				timer_settime(timer_1s, 100);
+			}
+		}
+	}
 }

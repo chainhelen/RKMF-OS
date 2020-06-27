@@ -43,8 +43,11 @@ $(KERNEL_BIN):
 	gcc -m32 -c -w -fno-stack-protector -fno-builtin kernel/mouse.c -o kernel/mouse.o
 	gcc -m32 -c -w -fno-stack-protector -fno-builtin kernel/memory.c -o kernel/memory.o
 	gcc -m32 -c -w -fno-stack-protector -fno-builtin kernel/sheet.c -o kernel/sheet.o
+	gcc -m32 -c -w -fno-stack-protector -fno-builtin kernel/timer.c -o kernel/timer.o
+	gcc -m32 -c -w -fno-stack-protector -fno-builtin kernel/task.c -o kernel/task.o
+	gcc -m32 -c -w -fno-stack-protector -fno-builtin kernel/gdt.c -o kernel/gdt.o
 	# 话说这不知道链接器ld已经识别_start作为入口了，为什么 kernerl.o还要放在第一位，否则不知道跳到那里去了
-	ld -m elf_i386 -s -Ttext 0x30400 kernel/kernel.o kernel/cstart.o kernel/windows.o  kernel/idt.o kernel/font.o kernel/fifo.o kernel/keyboard.o kernel/hankaku.o kernel/mouse.o kernel/memory.o kernel/sheet.o -o kernel.bin
+	ld -m elf_i386 -s -Ttext 0x30400 kernel/kernel.o kernel/cstart.o kernel/windows.o  kernel/idt.o kernel/font.o kernel/fifo.o kernel/keyboard.o kernel/hankaku.o kernel/mouse.o kernel/memory.o kernel/sheet.o kernel/timer.o kernel/task.o kernel/gdt.o -o kernel.bin
 
 
 clean:
