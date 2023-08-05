@@ -56,13 +56,12 @@ SECTIONS
 	PROVIDE(end = .);
 
 	. = ALIGN(4096);
-	/*
     	.percpu : {
         	_percpu_start = .;
         	*(.percpu)
         	. = ALIGN(4096);
        		 _percpu_end = .;
-    	}*/
+    	}
 
 	/DISCARD/ : {
 		*(.eh_frame .rela.eh_frame .note.GNU-stack)

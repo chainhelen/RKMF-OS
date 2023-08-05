@@ -6,6 +6,7 @@
 0. 官方说明  https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
 1. Multiboot 规范 https://gonglja.github.io/posts/4e0f05fa/
 2. Multiboot 规范https://blog.csdn.net/weixin_45206746/article/details/113065721 https://blog.csdn.net/weixin_45206746/article/details/113065721
+3. 64位操作系统 参考实现 https://zhuanlan.zhihu.com/p/139409838
 */
 
 
@@ -37,6 +38,8 @@ multiboot_entry:
   push %ebx
   push %eax
 # zero 4 pages for our bootstrap page tables
+# 资料参考 https://www.singlix.com/trdos/archive/OSDev_Wiki/Setting%20Up%20Long%20Mode.pdf
+# 手册https://www.amd.com/system/files/TechDocs/24593.pdf
   xor %eax, %eax
   mov $0x1000, %edi
   mov $0x5000, %ecx
@@ -132,7 +135,8 @@ entry64high:
   test %ebx, %ebx
   #jnz entry64mp 暂时只处理主cpu
   #movq    $the_cpu+4208, %rax #the_cpu为每个cpu的栈地址
-  mov %rax,%rsp
+  #mov %rax,%rsp
+  movq $(stack + STACK_SIZE), %rsp
   jmp bp_main
 
 .global __deadloop
