@@ -14,7 +14,8 @@ const (
 type gdtSegDesc [8]byte
 
 var (
-	gdt [7]gdtSegDesc
+	gdt    [7]gdtSegDesc
+	gdtptr [10]byte
 )
 
 // 段描述符，这里有介绍 https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md#%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F
@@ -60,6 +61,8 @@ const (
 	Desc_Flags_L = 0x2
 )
 
+func lgdt(gdtptr uintptr)
+
 func gdtInit() {
 	// https://wiki.osdev.org/Global_Descriptor_Table  根据这里所说
 	// In 64-bit mode, the Base and Limit values are ignored, each descriptor covers the entire
@@ -69,6 +72,19 @@ func gdtInit() {
 	setGdtDesc(&gdt[SEG_KDATA], Desc_Type_Data_Read_Write, 0, 0xffffffff, Desc_DPL_0)
 	setGdtDesc(&gdt[SEG_UCODE], Desc_Type_Code_Excute, 0, 0xffffffff, Desc_DPL_3)
 	setGdtDesc(&gdt[SEG_UDATA], Desc_Type_Data_Read_Write, 0, 0xffffffff, Desc_DPL_3)
+
+	limit := uint16(unsafe.Sizeof(gdt) - 1)
+	base := uint64(uintptr(unsafe.Pointer(&gdt[0])))
+	gdtptr[0] = byte(limit)
+	gdtptr[1] = byte(limit >> 8)
+	gdtptr[2] = byte(base)
+	gdtptr[3] = byte(base >> 8)
+	gdtptr[4] = byte(base >> 16)
+	gdtptr[5] = byte(base >> 24)
+	gdtptr[6] = byte(base >> 32)
+	gdtptr[7] = byte(base >> 40)
+	gdtptr[8] = byte(base >> 48)
+	gdtptr[9] = byte(base >> 56)
 
 	lgdt(uintptr(unsafe.Pointer(&gdtptr[0])))
 }
