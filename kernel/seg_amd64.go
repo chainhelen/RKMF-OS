@@ -1,6 +1,8 @@
 package kernel
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 // xv6 https://github.com/mit-pdos/xv6-public/blob/master/mmu.h#L15
 const (
@@ -16,6 +18,7 @@ type gdtSegDesc [8]byte
 var (
 	gdt    [7]gdtSegDesc
 	gdtptr [10]byte
+	tss    [26]uint32
 )
 
 // 段描述符，这里有介绍 https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md#%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F
@@ -46,6 +49,26 @@ func setGdtDesc(desc *gdtSegDesc, _type, _base, _limit, _dpl uint32) {
 	desc[7] = byte(_base >> 24)
 }
 
+func setTssDesc(lo, hi *gdtSegDesc, addr, limit uintptr) {
+	// tss limit 0-15
+	lo[0] = byte(limit)
+	lo[1] = byte(limit >> 8)
+	// tss base 0-15
+	lo[2] = byte(addr)
+	lo[3] = byte(addr >> 8)
+	// tss base 16-23
+	lo[4] = byte(addr >> 16)
+	// type 64 bit tss, P = 1
+	lo[5] = 0x89
+	// limit 16-19 and AVL = 1
+	lo[6] = 0x80 | byte(limit>>16)&0x07
+	lo[7] = byte(addr >> 24)
+
+	for i := 8; i < 16; i++ {
+		hi[i] = byte(addr >> (32 + 8*(i-8)))
+	}
+}
+
 const (
 	Desc_DPL_0 = 0
 	Desc_DPL_3 = 3
@@ -62,6 +85,8 @@ const (
 )
 
 func lgdt(gdtptr uintptr)
+func ltr(sel uintptr) // xv6是32bit，对应ltr参数是16位；这里64bit下的ltr的参数是32位。
+func reloadCS()
 
 func gdtInit() {
 	// https://wiki.osdev.org/Global_Descriptor_Table  根据这里所说
@@ -72,19 +97,87 @@ func gdtInit() {
 	setGdtDesc(&gdt[SEG_KDATA], Desc_Type_Data_Read_Write, 0, 0xffffffff, Desc_DPL_0)
 	setGdtDesc(&gdt[SEG_UCODE], Desc_Type_Code_Excute, 0, 0xffffffff, Desc_DPL_3)
 	setGdtDesc(&gdt[SEG_UDATA], Desc_Type_Data_Read_Write, 0, 0xffffffff, Desc_DPL_3)
+	setTssDesc(&gdt[SEG_TSS], &gdt[SEG_TSS+1], uintptr(unsafe.Pointer(&tss[0])), uintptr(unsafe.Sizeof(tss))-1)
 
 	limit := uint16(unsafe.Sizeof(gdt) - 1)
 	base := uint64(uintptr(unsafe.Pointer(&gdt[0])))
 	gdtptr[0] = byte(limit)
 	gdtptr[1] = byte(limit >> 8)
-	gdtptr[2] = byte(base)
-	gdtptr[3] = byte(base >> 8)
-	gdtptr[4] = byte(base >> 16)
-	gdtptr[5] = byte(base >> 24)
-	gdtptr[6] = byte(base >> 32)
-	gdtptr[7] = byte(base >> 40)
-	gdtptr[8] = byte(base >> 48)
-	gdtptr[9] = byte(base >> 56)
+	for i := 2; i < 10; i++ {
+		gdtptr[i] = byte(base >> (8 * (i - 2)))
+	}
 
 	lgdt(uintptr(unsafe.Pointer(&gdtptr[0])))
+	// https://wiki.osdev.org/Task_State_Segment
+	// The only interesting fields are SS0 and ESP0. Whenever a system call occurs, the CPU gets the SS0 and ESP0-value
+	// in its TSS and assigns the stack-pointer to it.
+	ltr(SEG_TSS << 3)
+
+	// https://stackoverflow.com/questions/34264752/change-gdt-and-update-cs-while-in-long-mode
+	// reloadCS() 这里应该不需要reload cs
+}
+
+var idt [256]idtSetDesc
+
+type idtSetDesc struct {
+	// copy from https://wiki.osdev.org/Interrupt_Descriptor_Table
+	//	uint16_t offset_1;        // offset bits 0..15
+	//	uint16_t selector;        // a code segment selector in GDT or LDT
+	//	uint8_t  ist;             // bits 0..2 holds Interrupt Stack Table offset, rest of bits zero.
+	//	uint8_t  type_attributes; // gate type, dpl, and p fields
+	//	uint16_t offset_2;        // offset bits 16..31
+	//	uint32_t offset_3;        // offset bits 32..63
+	//	uint32_t zero;            // reserved
+
+	Offset1        uint16
+	Selector       uint16
+	Ist            uint8
+	TypeAttributes uint8
+	Offset2        uint16
+	Offset3        uint32
+	Zero           uint32
+}
+
+//go:nosplit
+func setIdtDesc(desc *idtSetDesc, selector uint16, addr uintptr, dpl byte) {
+	desc.Offset1 = uint16(addr & 0xffff)
+	desc.Selector = selector << 3
+	desc.Ist = 0
+	desc.TypeAttributes = 0x8e | (dpl << 4)
+	desc.Offset2 = uint16(addr >> 16 & 0xffff)
+	desc.Offset3 = uint32(addr>>32) & 0xffffffff
+}
+
+// go::linkname FuncPC runtime.funcPC
+func FuncPC(interface{}) uintptr
+
+const (
+	T_SYSCALL = 64 // system call
+)
+
+var (
+	idtptr [10]byte
+)
+
+//go:nosplit
+func lidt(idtptr uintptr)
+
+//go:generate go run ./vector_gen/main.go
+func idtInit() {
+	// https://wiki.osdev.org/Interrupt_Descriptor_Table
+	for i := 0; i < 256; i++ {
+		setIdtDesc(&idt[i], SEG_KCODE, FuncPC(vectors[i]), Desc_DPL_0)
+	}
+	setIdtDesc(&idt[T_SYSCALL], SEG_KCODE, FuncPC(vectors[T_SYSCALL]), Desc_DPL_3)
+
+	limit := uint16(unsafe.Sizeof(idt) - 1)
+	base := uint64(uintptr(unsafe.Pointer(&idt[0])))
+
+	idtptr[0] = byte(limit)
+	idtptr[1] = byte(limit >> 8)
+	for i := 2; i < 10; i++ {
+		idtptr[i] = byte(base >> (8 * (i - 2)))
+	}
+
+	lidt(uintptr(unsafe.Pointer(&idtptr)))
 }
