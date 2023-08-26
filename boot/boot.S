@@ -11,7 +11,7 @@
 
 
 #define STACK_SIZE (16 * (1<<10))
-#define MULTIBOOT_HEADER_FLAGS MULTIBOOT_INFO_MEM_MAP | MULTIBOOT_AOUT_KLUDGE
+#define MULTIBOOT_HEADER_FLAGS    MULTIBOOT_INFO_MEM_MAP | MULTIBOOT_MEMORY_INFO | MULTIBOOT_PAGE_ALIGN| MULTIBOOT_AOUT_KLUDGE | MULTIBOOT_INFO_CMDLINE
 /* #define MULTIBOOT_HEADER_FLAGS MULTIBOOT_INFO_MEM_MAP | MULTIBOOT_MEMORY_INFO | MULTIBOOT_PAGE_ALIGN | MULTIBOOT_INFO_CMDLINE */
 
 .global multiboot_entry
@@ -31,8 +31,8 @@ mboot_header:
 multiboot_entry:
     movl $(stack + STACK_SIZE), %esp
 
-    // push $0
-    // popf
+    push $0
+    popf
 
 # multiboot_info_type in ebx
   push %ebx
