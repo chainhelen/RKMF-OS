@@ -9,33 +9,32 @@ unsigned char *videobuf = (unsigned char *)0xb8000;
 char the_cpu[4096] __attribute__((section(".percpu")));
 void print(char *s, int len);
 void memcpy(char *dst, char *src, int count);
-uint64 loadGoELF(multiboot_info_t *info) ;
-uint64 loadELF(char *elf_header);
+void memset(char *addr, char data, int count);
+Elf64_Addr loadGoELF(multiboot_info_t *info) ;
+Elf64_Addr loadELF(char *elf_header);
+typedef void (*go_entry_t)(uint32, uint32);
 
 // The physical address of the multiboot header. On qemu for example this is typically at 0x9500.
 // TODO？ 这里函数调约是反的，可能跟直接进入64位有关
 void bp_main(multiboot_info_t *mbi, unsigned long magic)
 {
-    if(loadGoELF(mbi) == 1) {
-        print("1", 1);
-    } else {
-        print("0", 1);
-    }
+    Elf64_Addr addr = loadGoELF(mbi);
+    go_entry_t go_entry  = (go_entry_t)(addr);
+    go_entry((uint32)magic, (uint32)(uint64)mbi);
+
     while(1){};
 }
 
-uint64 loadGoELF(multiboot_info_t *info) {
+Elf64_Addr loadGoELF(multiboot_info_t *info) {
     if (info->mods_count < 1) {
         return 0;
     }
     multiboot_module_t *mod = (multiboot_module_t *)((uint64) (info->mods_addr));
-    int count = mod->mod_end - mod->mod_start + 1;
-    char *image = (char *)(100 << 20);
-    memcpy(image, (char *)((uint64)mod->mod_start), count);
-    return loadELF(image);
+//  这里没有重新在100M位置copy一份，直接使用multiboot载入的image
+    return loadELF((char *)((uint64)mod->mod_start));
 }
 
-uint64 loadELF(char *elf_header) {
+Elf64_Addr loadELF(char *elf_header) {
     struct elf64_hdr *hdr = (struct elf64_hdr *)elf_header;
     // magic 0x7f454C46
     if (!(hdr->e_ident[0] == 0x7f &&
@@ -44,8 +43,24 @@ uint64 loadELF(char *elf_header) {
             hdr->e_ident[3] == 0x46)) {
        return 0;
     }
+    // golang 静态编译的
+    struct elf64_phdr *phdr = (struct elf64_phdr *)(elf_header + hdr->e_phoff);
 
-    return 1;
+    for (int i = 0;i < hdr->e_phnum;i++) {
+        struct elf64_phdr *phIter = (struct elf64_phdr *)(phdr + i);
+        char *dstphAddr = (char *)(phIter->p_paddr);
+        char *srcPhAddr = elf_header + (Elf64_Off)phIter->p_offset;
+        int memCopyBsCount = (int)(phIter -> p_filesz);
+        memcpy(dstphAddr, srcPhAddr, memCopyBsCount);
+
+        if (phIter->p_memsz > phIter->p_filesz) {
+            char *addr = (char *)((Elf64_Addr)phIter->p_paddr+ (Elf64_Off)phIter->p_filesz);
+            int count = (int)(phIter->p_memsz - phIter->p_filesz);
+            memset(addr, 0, count);
+        }
+    }
+
+    return hdr->e_entry;
 }
 
 void memcpy(char *dst, char *src, int count) {
@@ -53,6 +68,13 @@ void memcpy(char *dst, char *src, int count) {
         *dst = *src;
         dst++;
         src++;
+    }
+}
+
+void memset(char *addr, char data, int count) {
+    for (int i = 0;i < count;i++) {
+        *addr = data;
+        addr++;
     }
 }
 

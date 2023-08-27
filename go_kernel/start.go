@@ -1,4 +1,4 @@
-package kernel
+package go_kernel
 
 func preinit() {
 	gdtInit()
