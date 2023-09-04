@@ -1,6 +1,6 @@
 package go_kernel
 
-func preinit() {
+func preinit(magic, mbiptr uintptr) {
 	gdtInit()
 	idtInit()
 }

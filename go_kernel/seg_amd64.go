@@ -88,6 +88,7 @@ func lgdt(gdtptr uintptr)
 func ltr(sel uintptr) // xv6是32bit，对应ltr参数是16位；这里64bit下的ltr的参数是32位。
 func reloadCS()
 
+//go:nosplit
 func gdtInit() {
 	// https://wiki.osdev.org/Global_Descriptor_Table  根据这里所说
 	// In 64-bit mode, the Base and Limit values are ignored, each descriptor covers the entire
@@ -148,7 +149,7 @@ func setIdtDesc(desc *idtSetDesc, selector uint16, addr uintptr, dpl byte) {
 	desc.Offset3 = uint32(addr>>32) & 0xffffffff
 }
 
-// go::linkname FuncPC runtime.funcPC
+//go:linkname FuncPC runtime.funcPC
 func FuncPC(interface{}) uintptr
 
 const (
@@ -181,3 +182,5 @@ func idtInit() {
 
 	lidt(uintptr(unsafe.Pointer(&idtptr)))
 }
+
+func rt0()

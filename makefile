@@ -6,16 +6,16 @@ CCFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -g -O0 -Wall -Werro
 LDFLAGS = -T ./boot/kernel64.ld -m elf_x86_64
 
 go.elf:
-	go build -ldflags="-E github.com/chainhelen/RKMF-OS/kernel.rt0 -T 0x3200000" -gcflags="all=-N -l" -o go.elf ./go_kernel
-kernel.elf: boot.o main.o
+	go build -ldflags="-E github.com/chainhelen/RKMF-OS/go_kernel.rt0 -T 0x3200000" -gcflags="all=-N -l" -o go.elf ./app
+bootloader.elf: boot.o main.o
 	$(LD) $(LDFLAGS) -o $@ $^
 boot.o: ./boot/boot.S
 	$(CC) $(CCFLAGS) -o $@ -c $^
 main.o: ./boot/main.c
 	$(CC) $(CCFLAGS) -o $@ -c $^
-qemu: kernel.elf go.elf
-	qemu-system-x86_64 -no-reboot -kernel kernel.elf -initrd go.elf
-qemu-gdb: kernel.elf go.elf
-	qemu-system-x86_64 -s -S -no-reboot -kernel kernel.elf -initrd go.elf
+qemu: bootloader.elf go.elf
+	qemu-system-x86_64 -no-reboot -kernel bootloader.elf -initrd go.elf
+qemu-gdb: bootloader.elf go.elf
+	qemu-system-x86_64 -s -S -no-reboot -kernel bootloader.elf -initrd go.elf
 clean:
-	rm -rf *.o && rm kernel.elf && rm go.elf
+	rm -rf *.o && rm bootloader.elf && rm go.elf
