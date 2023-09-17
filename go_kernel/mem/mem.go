@@ -65,7 +65,7 @@ func (km *KernelMem) FreeRange() {
 	}
 }
 
-// go:nosplit
+//go:nosplit
 func (km *KernelMem) alloc() uintptr {
 	r := km.freelist
 	if r == nil {
@@ -78,12 +78,13 @@ func (km *KernelMem) alloc() uintptr {
 // go:notinheap
 type pte_t uintptr
 
-// go:notinheap
+//go:nosplit
 func (p *pte_t) Idx(idx int) *pte_t {
 	t := pte_t(uintptr(*p) + uintptr(idx*PointerSize))
 	return &t
 }
 
+//go:nosplit
 func (p *pte_t) Entry() uintptr {
 	return uintptr(*p)
 }
