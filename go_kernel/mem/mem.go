@@ -1,10 +1,13 @@
 package mem
 
-import "unsafe"
+import (
+	"github.com/chainhelen/RKMF-OS/go_kernel/text"
+	"unsafe"
+)
 
 const (
 	MStart      = 100 << 20 // 100M
-	MEnd        = 256 << 20 // 256M
+	MEnd        = 256 << 20 // 256M，注意qemu启动需要指定最大内存空间需要大于这个值
 	PageSize    = 4 << 10
 	PointerSize = 4 << (^uintptr(0) >> 63)
 
@@ -16,6 +19,7 @@ const (
 )
 
 // refrence kmalloc.c of xv6
+//go:notinheap
 type run struct {
 	next *run
 }
@@ -38,6 +42,7 @@ var KM = KernelMem{
 // free the page of physical memory pointed at by v,
 // which normally should have been returned by a
 // call to kalloc().
+//go:nosplit
 func (km *KernelMem) free(v uintptr) {
 	if v%PageSize != 0 || v < km.start || v > km.end {
 		throw("kfree")
@@ -62,7 +67,12 @@ func pageRoundDown(sz uintptr) uintptr {
 func (km *KernelMem) FreeRange() {
 	for p := pageRoundUp(km.start); p+PageSize <= km.end; p += PageSize {
 		km.free(p)
+		// if p != pageRoundUp(km.start) && p != pageRoundUp(km.start+PageSize) {
+		// 	text.Printf("addr:0x%x list:0x%x next:0x%x %d\n", p, uintptr(unsafe.Pointer(km.freelist)), uintptr(unsafe.Pointer(km.freelist.next)), uintptr(unsafe.Pointer(km.freelist.next)))
+		// }
 	}
+	text.Printf("free range finish [0x%x, 0x%x), head:0x%x, next:0x%x\n",
+		int(km.start), int(km.end), uintptr(unsafe.Pointer(km.freelist)), uintptr(unsafe.Pointer(km.freelist.next)))
 }
 
 //go:nosplit
@@ -80,8 +90,8 @@ type pte_t uintptr
 
 //go:nosplit
 func (p *pte_t) Idx(idx int) *pte_t {
-	t := pte_t(uintptr(*p) + uintptr(idx*PointerSize))
-	return &t
+	t := pte_t(uintptr(unsafe.Pointer(p)) + uintptr(idx*PointerSize))
+	return (*pte_t)(unsafe.Pointer(t))
 }
 
 //go:nosplit
@@ -95,6 +105,7 @@ func (p *pte_t) Entry() uintptr {
 // 3）PDT (Page Directory Table) 及表内的PDE结构，每个表4K，内含512个PDE结构，每个8字节
 // 4）PT(Page Table)及表内额PTE结构，每个表4K，内含512个PTE结构，每个8字节。
 // 5）OFFSET：页内偏移量
+//go:nosplit
 func pageEntryIdx(va uintptr, lv int) int {
 	// ((2 << 9)  - 1) 其实就是跟512(2<<9)取模；至于为什么是2<<9，因为一页是4k，而64位寄存器（或者说指针）是8字节，则4k/8 = 512
 	return int((va >> (12 + (lv-1)*9)) & ((2 << 9) - 1))
@@ -122,11 +133,12 @@ func walkpgdir(pgdir *pte_t, va uintptr, perm uint64, alloc bool) *pte_t {
 			memset(addr, 0, PageSize)
 			*pe = pte_t(addr | uintptr(perm))
 		}
-		pg = pe
+		pg = (*pte_t)(unsafe.Pointer(*pe))
 	}
 	return pg
 }
 
+//go:nosplit
 func mappages(pgdir *pte_t, va, pa uintptr, size uint64, perm uint64) {
 	va, last := pageRoundDown(va), pageRoundDown(va+uintptr(size)-1)
 	for {
@@ -134,6 +146,7 @@ func mappages(pgdir *pte_t, va, pa uintptr, size uint64, perm uint64) {
 		if pte == nil {
 			throw("pte walkpgdir failed")
 		}
+		text.Printf("*pte 0x%x\n", uintptr(*pte))
 		if (*pte)&PTE_P != 0 {
 			throw("pte now present")
 		}
@@ -146,18 +159,20 @@ func mappages(pgdir *pte_t, va, pa uintptr, size uint64, perm uint64) {
 	}
 }
 
-// go:nosplit
+//go:nosplit
+func lcr3(e *pte_t)
+
+//go:nosplit
 func (km *KernelMem) SetUpKvm() {
 	addr := km.alloc()
 	memset(addr, byte(0), PageSize)
 
 	km.kpgdir = (*pte_t)(unsafe.Pointer(addr))
-	// [0, MEnd) 内核能够访问这个访问的内存
-	// TODO
 	mappages(km.kpgdir, 0, 0, MEnd, PTE_P|PTE_W|PTE_U)
+	lcr3(km.kpgdir)
 }
 
-// go:nosplit
+//go:nosplit
 func memset(s uintptr, c byte, n int) {
 	for i := 0; i < n; i++ {
 		pByte := (*byte)(unsafe.Pointer(s + uintptr(i)))

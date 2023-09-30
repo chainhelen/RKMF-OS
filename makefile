@@ -14,8 +14,8 @@ boot.o: ./boot/boot.S
 main.o: ./boot/main.c
 	$(CC) $(CCFLAGS) -o $@ -c $^
 qemu: bootloader.elf go.elf
-	qemu-system-x86_64 -no-reboot -kernel bootloader.elf -initrd go.elf
+	qemu-system-x86_64 -no-reboot -m 256M -kernel bootloader.elf -initrd go.elf
 qemu-gdb: bootloader.elf go.elf
-	qemu-system-x86_64 -s -S -no-reboot -kernel bootloader.elf -initrd go.elf
+	qemu-system-x86_64 -s -S -no-reboot -m 256M -kernel bootloader.elf -initrd go.elf
 clean:
 	rm -rf *.o && rm bootloader.elf && rm go.elf

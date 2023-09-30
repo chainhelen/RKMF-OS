@@ -65,7 +65,7 @@ func setTssDesc(lo, hi *gdtSegDesc, addr, limit uintptr) {
 	lo[7] = byte(addr >> 24)
 
 	for i := 8; i < 16; i++ {
-		hi[i] = byte(addr >> (32 + 8*(i-8)))
+		hi[i-8] = byte(addr >> (32 + 8*(i-8)))
 	}
 }
 
@@ -84,8 +84,13 @@ const (
 	Desc_Flags_L = 0x2
 )
 
+//go:nosplit
 func lgdt(gdtptr uintptr)
+
+//go:nosplit
 func ltr(sel uintptr) // xv6是32bit，对应ltr参数是16位；这里64bit下的ltr的参数是32位。
+
+//go:nosplit
 func reloadCS()
 
 //go:nosplit
@@ -163,8 +168,9 @@ var (
 //go:nosplit
 func lidt(idtptr uintptr)
 
-//go:generate go run ./vector_gen/main.go
+//go:nosplit
 func idtInit() {
+	//vectors.go go:generate go run ./vector_gen/main.go
 	// https://wiki.osdev.org/Interrupt_Descriptor_Table
 	for i := 0; i < 256; i++ {
 		setIdtDesc(&idt[i], SEG_KCODE, FuncPC(vectors[i]), Desc_DPL_0)
