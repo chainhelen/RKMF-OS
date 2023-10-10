@@ -136,7 +136,7 @@ func walkpgdir(pgdir *pte_t, va uintptr, perm uint64, alloc bool) *pte_t {
 			memset(addr, 0, PageSize)
 			*pe = pte_t(addr | uintptr(perm))
 		}
-		pg = (*pte_t)(unsafe.Pointer(*pe))
+		pg = (*pte_t)(unsafe.Pointer((*pe) &^ 0xfff)) // 需要把最后三位清空，因为不是含义不是地址
 	}
 	return pg
 }
@@ -176,7 +176,7 @@ func (km *KernelMem) SetUpKvm() {
 	km.kpgdir = (*pte_t)(unsafe.Pointer(addr))
 	mappages(km.kpgdir, 0, 0, MEnd, PTE_P|PTE_W|PTE_U)
 	lcr3(km.kpgdir)
-	//pageEnable()
+	pageEnable()
 }
 
 //go:nosplit
