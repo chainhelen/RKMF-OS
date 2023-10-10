@@ -88,6 +88,7 @@ entry32mp:
   mov %eax, %cr4
 
 # enable long mode - EFER.LME=1,进入64位长模式
+# CPU工作模式：执行程序的三种模式 https://zhuanlan.zhihu.com/p/502776497
   mov $0xc0000080, %ecx
   rdmsr
   bts $8, %eax

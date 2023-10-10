@@ -24,4 +24,9 @@ func preinit(magic, mbiptr uintptr) {
 	idtInit()
 	mem.KM.FreeRange()
 	mem.KM.SetUpKvm()
+
+	text.Printf("preinit finish")
+	for {
+
+	}
 }

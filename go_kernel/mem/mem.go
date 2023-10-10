@@ -7,7 +7,7 @@ import (
 
 const (
 	MStart      = 100 << 20 // 100M
-	MEnd        = 256 << 20 // 256M，注意qemu启动需要指定最大内存空间需要大于这个值
+	MEnd        = 256 << 20 // 256M，注意qemu启动需要指定最大内存空间需要大于等于这个值
 	PageSize    = 4 << 10
 	PointerSize = 4 << (^uintptr(0) >> 63)
 
@@ -107,8 +107,8 @@ func (p *pte_t) Entry() uintptr {
 // 5）OFFSET：页内偏移量
 //go:nosplit
 func pageEntryIdx(va uintptr, lv int) int {
-	// ((2 << 9)  - 1) 其实就是跟512(2<<9)取模；至于为什么是2<<9，因为一页是4k，而64位寄存器（或者说指针）是8字节，则4k/8 = 512
-	return int((va >> (12 + (lv-1)*9)) & ((2 << 9) - 1))
+	// ((1 << 9)  - 1) 其实就是跟512(1<<9)取模；至于为什么是1<<9，因为一页是4k，而64位寄存器（或者说指针）是8字节，则4k/8 = 512
+	return int((va >> (12 + (lv-1)*9)) & ((1 << 9) - 1))
 }
 
 //go:nosplit
@@ -118,6 +118,9 @@ func walkpgdir(pgdir *pte_t, va uintptr, perm uint64, alloc bool) *pte_t {
 	pg := pgdir
 	for lv := 4; lv >= 1; lv-- {
 		idx := pageEntryIdx(va, lv)
+		if idx >= 512 || idx < 0 {
+			throw("idx compute failed")
+		}
 		pe := pg.Idx(idx)
 		if lv == 1 {
 			return pe
@@ -146,11 +149,11 @@ func mappages(pgdir *pte_t, va, pa uintptr, size uint64, perm uint64) {
 		if pte == nil {
 			throw("pte walkpgdir failed")
 		}
-		text.Printf("*pte 0x%x\n", uintptr(*pte))
+		// text.Printf("va 0x%x, *pte 0x%x\n", va, uintptr(*pte))
 		if (*pte)&PTE_P != 0 {
-			throw("pte now present")
+			throw("pte remap")
 		}
-		*pte = pte_t(uint64(pa) | perm)
+		*pte = pte_t(uint64(pa) | perm | PTE_P)
 		if va == last {
 			break
 		}
@@ -163,6 +166,9 @@ func mappages(pgdir *pte_t, va, pa uintptr, size uint64, perm uint64) {
 func lcr3(e *pte_t)
 
 //go:nosplit
+func pageEnable()
+
+//go:nosplit
 func (km *KernelMem) SetUpKvm() {
 	addr := km.alloc()
 	memset(addr, byte(0), PageSize)
@@ -170,6 +176,7 @@ func (km *KernelMem) SetUpKvm() {
 	km.kpgdir = (*pte_t)(unsafe.Pointer(addr))
 	mappages(km.kpgdir, 0, 0, MEnd, PTE_P|PTE_W|PTE_U)
 	lcr3(km.kpgdir)
+	//pageEnable()
 }
 
 //go:nosplit
