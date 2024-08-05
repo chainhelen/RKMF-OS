@@ -1,4 +1,4 @@
-package go_kernel
+package sys
 
 import (
 	"unsafe"
@@ -94,7 +94,7 @@ func ltr(sel uintptr) // xv6是32bit，对应ltr参数是16位；这里64bit下�
 func reloadCS()
 
 //go:nosplit
-func gdtInit() {
+func GdtInit() {
 	// https://wiki.osdev.org/Global_Descriptor_Table  根据这里所说
 	// In 64-bit mode, the Base and Limit values are ignored, each descriptor covers the entire
 	// linear address space regardless of what they are set to.
@@ -169,7 +169,7 @@ var (
 func lidt(idtptr uintptr)
 
 //go:nosplit
-func idtInit() {
+func IdtInit() {
 	//vectors.go go:generate go run ./vector_gen/main.go
 	// https://wiki.osdev.org/Interrupt_Descriptor_Table
 	for i := 0; i < 256; i++ {

@@ -1,4 +1,4 @@
-package go_kernel
+package sys
 
 func dotrap() {
 }

@@ -1,6 +1,19 @@
-CC = gcc
-LD = ld
-GO = go
+UNAME_S := $(shell uname -s)
+
+ifeq ($(strip $(UNAME_S)), Darwin)
+    CC = x86_64-elf-gcc
+    LD = x86_64-elf-ld
+    GO = go
+else ifeq ($(strip $(UNAME_S)), Linux)
+    CC = gcc
+    LD = ld
+    GO = go
+else
+    $(error Unsupported operating system: $(UNAME_S))
+endif
+
+
+export GOOS = linux
 CCFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -g -O0 -Wall -Werror -fno-omit-frame-pointer -I. -nostdinc -fno-pie -m64
 /*LDFLAGS = -N -e _start -Ttext 0x3200000 -m elf_x86_64*/
 LDFLAGS = -T ./boot/kernel64.ld -m elf_x86_64
@@ -14,8 +27,8 @@ boot.o: ./boot/boot.S
 main.o: ./boot/main.c
 	$(CC) $(CCFLAGS) -o $@ -c $^
 qemu: bootloader.elf go.elf
-	qemu-system-x86_64 -no-reboot -m 256M -kernel bootloader.elf -initrd go.elf
+	qemu-system-x86_64 -no-reboot -m 256M -serial mon:stdio  -kernel bootloader.elf -initrd go.elf
 qemu-gdb: bootloader.elf go.elf
-	qemu-system-x86_64 -s -S -no-reboot -m 256M -kernel bootloader.elf -initrd go.elf
+	qemu-system-x86_64 -s -S -no-reboot -m 256M -serial mon:stdio  -kernel bootloader.elf -initrd go.elf
 clean:
 	rm -rf *.o && rm bootloader.elf && rm go.elf

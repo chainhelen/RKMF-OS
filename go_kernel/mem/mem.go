@@ -1,13 +1,15 @@
 package mem
 
 import (
-	"github.com/chainhelen/RKMF-OS/go_kernel/text"
 	"unsafe"
+
+	"github.com/chainhelen/RKMF-OS/go_kernel/text"
 )
 
 const (
-	MStart      = 100 << 20 // 100M
-	MEnd        = 256 << 20 // 256M，注意qemu启动需要指定最大内存空间需要大于等于这个值
+	MStart = 100 << 20 // 100M
+	// MEnd        = 256 << 20 // 256M，注意qemu启动需要指定最大内存空间需要大于等于这个值
+	MEnd        = 120 << 20 // 256M，注意qemu启动需要指定最大内存空间需要大于等于这个值
 	PageSize    = 4 << 10
 	PointerSize = 4 << (^uintptr(0) >> 63)
 
@@ -64,7 +66,7 @@ func pageRoundDown(sz uintptr) uintptr {
 }
 
 //go:nosplit
-func (km *KernelMem) FreeRange() {
+func (km *KernelMem) freeRange() {
 	for p := pageRoundUp(km.start); p+PageSize <= km.end; p += PageSize {
 		km.free(p)
 		// if p != pageRoundUp(km.start) && p != pageRoundUp(km.start+PageSize) {
@@ -169,7 +171,7 @@ func lcr3(e *pte_t)
 func pageEnable()
 
 //go:nosplit
-func (km *KernelMem) SetUpKvm() {
+func (km *KernelMem) setUpKvm() {
 	addr := km.alloc()
 	memset(addr, byte(0), PageSize)
 
@@ -185,4 +187,10 @@ func memset(s uintptr, c byte, n int) {
 		pByte := (*byte)(unsafe.Pointer(s + uintptr(i)))
 		*pByte = c
 	}
+}
+
+//go:nosplit
+func InitAndSetKvm() {
+	KM.freeRange()
+	KM.setUpKvm()
 }

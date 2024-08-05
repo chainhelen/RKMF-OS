@@ -7,7 +7,7 @@ func sseInit()
 func checkSSE() (ok bool)
 
 //go:nosplit
-func AddSSESupprt() bool {
+func SSESupprt() bool {
 	sseInit()
 	return checkSSE()
 }
